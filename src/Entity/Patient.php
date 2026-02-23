@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\PatientRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: PatientRepository::class)]
@@ -51,6 +53,31 @@ class Patient
 
     #[ORM\Column]
     private ?\DateTime $registrationDate = null;
+
+    /**
+     * @var Collection<int, Appointment>
+     */
+    #[ORM\OneToMany(targetEntity: Appointment::class, mappedBy: 'patient', orphanRemoval: true)]
+    private Collection $appointments;
+
+    /**
+     * @var Collection<int, Odontogram>
+     */
+    #[ORM\OneToMany(targetEntity: Odontogram::class, mappedBy: 'patient', orphanRemoval: true)]
+    private Collection $odontograms;
+
+    /**
+     * @var Collection<int, Document>
+     */
+    #[ORM\OneToMany(targetEntity: Document::class, mappedBy: 'patient', orphanRemoval: true)]
+    private Collection $documents;
+
+    public function __construct()
+    {
+        $this->appointments = new ArrayCollection();
+        $this->odontograms = new ArrayCollection();
+        $this->documents = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -209,6 +236,96 @@ class Patient
     public function setRegistrationDate(\DateTime $registrationDate): static
     {
         $this->registrationDate = $registrationDate;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Appointment>
+     */
+    public function getAppointments(): Collection
+    {
+        return $this->appointments;
+    }
+
+    public function addAppointment(Appointment $appointment): static
+    {
+        if (!$this->appointments->contains($appointment)) {
+            $this->appointments->add($appointment);
+            $appointment->setPatient($this);
+        }
+
+        return $this;
+    }
+
+    public function removeAppointment(Appointment $appointment): static
+    {
+        if ($this->appointments->removeElement($appointment)) {
+            // set the owning side to null (unless already changed)
+            if ($appointment->getPatient() === $this) {
+                $appointment->setPatient(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Odontogram>
+     */
+    public function getOdontograms(): Collection
+    {
+        return $this->odontograms;
+    }
+
+    public function addOdontogram(Odontogram $odontogram): static
+    {
+        if (!$this->odontograms->contains($odontogram)) {
+            $this->odontograms->add($odontogram);
+            $odontogram->setPatient($this);
+        }
+
+        return $this;
+    }
+
+    public function removeOdontogram(Odontogram $odontogram): static
+    {
+        if ($this->odontograms->removeElement($odontogram)) {
+            // set the owning side to null (unless already changed)
+            if ($odontogram->getPatient() === $this) {
+                $odontogram->setPatient(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Document>
+     */
+    public function getDocuments(): Collection
+    {
+        return $this->documents;
+    }
+
+    public function addDocument(Document $document): static
+    {
+        if (!$this->documents->contains($document)) {
+            $this->documents->add($document);
+            $document->setPatient($this);
+        }
+
+        return $this;
+    }
+
+    public function removeDocument(Document $document): static
+    {
+        if ($this->documents->removeElement($document)) {
+            // set the owning side to null (unless already changed)
+            if ($document->getPatient() === $this) {
+                $document->setPatient(null);
+            }
+        }
 
         return $this;
     }
