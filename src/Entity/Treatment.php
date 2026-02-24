@@ -2,23 +2,28 @@
 
 namespace App\Entity;
 
+use App\Repository\TreatmentRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: TreatmentRepository::class)]
 class Treatment
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['treatment:read', 'appointment:read'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 150)]
+    #[Groups(['treatment:read', 'appointment:read'])]
     private ?string $treatmentName = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[Groups(['treatment:read'])]
     private ?string $description = null;
 
     /**

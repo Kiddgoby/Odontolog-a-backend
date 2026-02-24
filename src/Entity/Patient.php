@@ -6,6 +6,7 @@ use App\Repository\PatientRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: PatientRepository::class)]
 class Patient
@@ -13,42 +14,55 @@ class Patient
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['patient:read', 'appointment:read', 'odontogram:read', 'document:read'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 100)]
+    #[Groups(['patient:read', 'appointment:read'])]
     private ?string $firstName = null;
 
     #[ORM\Column(length: 100)]
+    #[Groups(['patient:read', 'appointment:read'])]
     private ?string $lastName = null;
 
     #[ORM\Column]
+    #[Groups(['patient:read'])]
     private ?int $nationalId = null;
 
     #[ORM\Column(length: 20)]
+    #[Groups(['patient:read'])]
     private ?string $socialSecurityNumber = null;
 
     #[ORM\Column(length: 20)]
+    #[Groups(['patient:read'])]
     private ?string $phone = null;
 
     #[ORM\Column(length: 100)]
+    #[Groups(['patient:read'])]
     private ?string $email = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['patient:read'])]
     private ?string $address = null;
 
     #[ORM\Column(length: 500)]
+    #[Groups(['patient:read'])]
     private ?string $billingData = null;
 
     #[ORM\Column(length: 500)]
+    #[Groups(['patient:read'])]
     private ?string $healthStatus = null;
 
     #[ORM\Column(length: 500)]
+    #[Groups(['patient:read'])]
     private ?string $familyHistory = null;
 
     #[ORM\Column(length: 500)]
+    #[Groups(['patient:read'])]
     private ?string $lifestyleHabits = null;
 
     #[ORM\Column(length: 500)]
+    #[Groups(['patient:read'])]
     private ?string $medicationAllergies = null;
 
     #[ORM\Column]
@@ -58,18 +72,21 @@ class Patient
      * @var Collection<int, Appointment>
      */
     #[ORM\OneToMany(targetEntity: Appointment::class, mappedBy: 'patient', orphanRemoval: true)]
+    #[Groups(['patient:read'])]
     private Collection $appointments;
 
     /**
      * @var Collection<int, Odontogram>
      */
     #[ORM\OneToMany(targetEntity: Odontogram::class, mappedBy: 'patient', orphanRemoval: true)]
+    #[Groups(['patient:read'])]
     private Collection $odontograms;
 
     /**
      * @var Collection<int, Document>
      */
     #[ORM\OneToMany(targetEntity: Document::class, mappedBy: 'patient', orphanRemoval: true)]
+    #[Groups(['patient:read'])]
     private Collection $documents;
 
     public function __construct()
