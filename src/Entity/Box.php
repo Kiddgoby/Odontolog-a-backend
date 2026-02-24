@@ -2,25 +2,31 @@
 
 namespace App\Entity;
 
+use App\Repository\BoxRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: BoxRepository::class)]
 class Box
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['box:read', 'appointment:read'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 100)]
+    #[Groups(['box:read', 'appointment:read'])]
     private ?string $name = null;
 
     #[ORM\Column]
+    #[Groups(['box:read'])]
     private ?int $capacity = null;
 
     #[ORM\Column(length: 50)]
+    #[Groups(['box:read'])]
     private ?string $status = null;
 
     /**

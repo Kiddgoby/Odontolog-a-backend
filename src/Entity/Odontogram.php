@@ -2,34 +2,41 @@
 
 namespace App\Entity;
 
+use App\Repository\OdontogramRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: OdontogramRepository::class)]
 class Odontogram
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['odontogram:read', 'patient:read', 'appointment:read'])]
     private ?int $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'odontograms')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['odontogram:read'])]
     private ?Patient $patient = null;
 
     #[ORM\ManyToOne(inversedBy: 'odontograms')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['odontogram:read'])]
     private ?Appointment $appointment = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE)]
+    #[Groups(['odontogram:read', 'patient:read'])]
     private ?\DateTimeInterface $creationDate = null;
 
     /**
      * @var Collection<int, OdontogramDetail>
      */
     #[ORM\OneToMany(targetEntity: OdontogramDetail::class, mappedBy: 'odontogram')]
+    #[Groups(['odontogram:read'])]
     private Collection $odontogramDetails;
 
     public function __construct()

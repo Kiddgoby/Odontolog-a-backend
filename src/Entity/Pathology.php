@@ -2,19 +2,23 @@
 
 namespace App\Entity;
 
+use App\Repository\PathologyRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: PathologyRepository::class)]
 class Pathology
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['pathology:read', 'odontogram:read'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['pathology:read', 'odontogram:read'])]
     private ?string $description = null;
 
     /**
