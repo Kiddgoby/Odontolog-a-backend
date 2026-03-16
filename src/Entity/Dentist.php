@@ -6,6 +6,7 @@ use App\Repository\DentistRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: DentistRepository::class)]
 class Dentist
@@ -13,24 +14,31 @@ class Dentist
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['dentist:read', 'patient:read', 'appointment:read'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 100)]
+    #[Groups(['dentist:read', 'patient:read', 'appointment:read'])]
     private ?string $firstName = null;
 
     #[ORM\Column(length: 100)]
+    #[Groups(['dentist:read', 'patient:read', 'appointment:read'])]
     private ?string $lastName = null;
 
     #[ORM\Column(length: 100)]
+    #[Groups(['dentist:read', 'patient:read', 'appointment:read'])]
     private ?string $specialty = null;
 
     #[ORM\Column(length: 100)]
+    #[Groups(['dentist:read'])]
     private ?string $availableDays = null;
 
     #[ORM\Column(length: 20)]
+    #[Groups(['dentist:read'])]
     private ?string $phone = null;
 
     #[ORM\Column(length: 100)]
+    #[Groups(['dentist:read'])]
     private ?string $email = null;
 
     /**

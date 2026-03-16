@@ -20,7 +20,7 @@ class DentistController extends AbstractController
     #[Route('', methods: ['GET'])]
     public function index(DentistRepository $repo): JsonResponse
     {
-        return $this->json($repo->findAll());
+        return $this->json($repo->findAll(), 200, [], ['groups' => 'dentist:read']);
     }
 
     // ===========
@@ -30,7 +30,7 @@ class DentistController extends AbstractController
     #[Route('/{id}', methods: ['GET'])]
     public function show(Dentist $dentist): JsonResponse
     {
-        return $this->json($dentist);
+        return $this->json($dentist, 200, [], ['groups' => 'dentist:read']);
     }
 
     // ===========
@@ -53,7 +53,7 @@ class DentistController extends AbstractController
         $em->persist($dentist);
         $em->flush();
 
-        return $this->json($dentist, 201);
+        return $this->json($dentist, 201, [], ['groups' => 'dentist:read']);
     }
 
     // ===========
@@ -74,7 +74,7 @@ class DentistController extends AbstractController
 
         $em->flush();
 
-        return $this->json($dentist);
+        return $this->json($dentist, 200, [], ['groups' => 'dentist:read']);
     }
 
     // ===========

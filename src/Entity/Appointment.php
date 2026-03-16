@@ -2,39 +2,48 @@
 
 namespace App\Entity;
 
+use App\Repository\AppointmentRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: AppointmentRepository::class)]
 class Appointment
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['appointment:read', 'patient:read', 'dentist:read', 'box:read', 'treatment:read'])]
     private ?int $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'appointments')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['appointment:read'])]
     private ?Patient $patient = null;
 
     #[ORM\ManyToOne(inversedBy: 'appointments')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['appointment:read', 'patient:read'])]
     private ?Dentist $dentist = null;
 
     #[ORM\ManyToOne(inversedBy: 'appointments')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['appointment:read', 'patient:read'])]
     private ?Box $box = null;
 
     #[ORM\ManyToOne(inversedBy: 'appointments')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['appointment:read', 'patient:read'])]
     private ?Treatment $treatment = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE)]
+    #[Groups(['appointment:read', 'patient:read'])]
     private ?\DateTimeInterface $visitDate = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[Groups(['appointment:read', 'patient:read'])]
     private ?string $consultationReason = null;
 
     /**

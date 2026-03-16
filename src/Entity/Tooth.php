@@ -2,19 +2,23 @@
 
 namespace App\Entity;
 
+use App\Repository\ToothRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: ToothRepository::class)]
 class Tooth
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['tooth:read', 'odontogram:read'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 50)]
+    #[Groups(['tooth:read', 'odontogram:read'])]
     private ?string $description = null;
 
     /**

@@ -2,28 +2,35 @@
 
 namespace App\Entity;
 
+use App\Repository\DocumentRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: DocumentRepository::class)]
 class Document
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['document:read', 'patient:read'])]
     private ?int $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'documents')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['document:read'])]
     private ?Patient $patient = null;
 
     #[ORM\Column(length: 100)]
+    #[Groups(['document:read', 'patient:read'])]
     private ?string $type = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['document:read', 'patient:read'])]
     private ?string $fileUrl = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE)]
+    #[Groups(['document:read', 'patient:read'])]
     private ?\DateTimeInterface $captureDate = null;
 
     public function getId(): ?int
