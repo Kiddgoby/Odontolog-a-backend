@@ -6,10 +6,12 @@ use App\Repository\DentistRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: DentistRepository::class)]
-class Dentist
+class Dentist implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -40,6 +42,9 @@ class Dentist
     #[ORM\Column(length: 100)]
     #[Groups(['dentist:read'])]
     private ?string $email = null;
+
+    #[ORM\Column(length: 255)]
+    private ?string $password = null;
 
     /**
      * @var Collection<int, Appointment>
@@ -129,6 +134,18 @@ class Dentist
         return $this;
     }
 
+    public function getPassword(): ?string
+    {
+        return $this->password;
+    }
+
+    public function setPassword(string $password): static
+    {
+        $this->password = $password;
+
+        return $this;
+    }
+
     /**
      * @return Collection<int, Appointment>
      */
@@ -157,5 +174,25 @@ class Dentist
         }
 
         return $this;
+    }
+
+    public function getUserIdentifier(): string
+    {
+        return $this->email ?? '';
+    }
+
+    public function getRoles(): array
+    {
+        return ['ROLE_DENTIST'];
+    }
+
+    public function eraseCredentials(): void
+    {
+        // Not needed for this implementation
+    }
+
+    public function getSalt(): ?string
+    {
+        return null;
     }
 }

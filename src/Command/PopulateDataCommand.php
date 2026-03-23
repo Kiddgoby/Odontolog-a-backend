@@ -18,6 +18,7 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 #[AsCommand(
     name: 'app:populate-data',
@@ -26,11 +27,13 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 class PopulateDataCommand extends Command
 {
     private EntityManagerInterface $entityManager;
+    private UserPasswordHasherInterface $passwordHasher;
 
-    public function __construct(EntityManagerInterface $entityManager)
+    public function __construct(EntityManagerInterface $entityManager, UserPasswordHasherInterface $passwordHasher)
     {
         parent::__construct();
         $this->entityManager = $entityManager;
+        $this->passwordHasher = $passwordHasher;
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -90,9 +93,9 @@ class PopulateDataCommand extends Command
 
         // 5. Dentists
         $dentistsData = [
-            ['Juan', 'Pérez', 'General Dentistry', 'Mon-Fri', '555-0101', 'juan.perez@example.com'],
-            ['María', 'García', 'Orthodontics', 'Tue-Thu', '555-0102', 'maria.garcia@example.com'],
-            ['Carlos', 'Rodríguez', 'Endodontics', 'Mon,Wed,Fri', '555-0103', 'carlos.rod@example.com'],
+            ['Juan', 'Pérez', 'General Dentistry', 'Mon-Fri', '555-0101', 'juan.perez@example.com', 'password123'],
+            ['María', 'García', 'Orthodontics', 'Tue-Thu', '555-0102', 'maria.garcia@example.com', 'password123'],
+            ['Carlos', 'Rodríguez', 'Endodontics', 'Mon,Wed,Fri', '555-0103', 'carlos.rod@example.com', 'password123'],
         ];
         $dentists = [];
         foreach ($dentistsData as $data) {
@@ -103,15 +106,16 @@ class PopulateDataCommand extends Command
             $dentist->setAvailableDays($data[3]);
             $dentist->setPhone($data[4]);
             $dentist->setEmail($data[5]);
+            $dentist->setPassword($data[6]); // Texto plano
             $this->entityManager->persist($dentist);
             $dentists[] = $dentist;
         }
 
         // 6. Patients
         $patientsData = [
-            ['Laura', 'Sánchez', 12345678, 'SS123', '600000001', 'laura@example.com', 'Calle A, 1', 'Bill 1'],
-            ['Pedro', 'López', 87654321, 'SS456', '600000002', 'pedro@example.com', 'Calle B, 2', 'Bill 2'],
-            ['Ana', 'Martínez', 23456781, 'SS789', '600000003', 'ana@example.com', 'Calle C, 3', 'Bill 3'],
+            ['Laura', 'Sánchez', 12345678, 'SS123', '600000001', 'laura@example.com', 'Calle A, 1', 'Bill 1', 'password123'],
+            ['Pedro', 'López', 87654321, 'SS456', '600000002', 'pedro@example.com', 'Calle B, 2', 'Bill 2', 'password123'],
+            ['Ana', 'Martínez', 23456781, 'SS789', '600000003', 'ana@example.com', 'Calle C, 3', 'Bill 3', 'password123'],
         ];
         $patients = [];
         foreach ($patientsData as $data) {
@@ -129,6 +133,10 @@ class PopulateDataCommand extends Command
             $patient->setLifestyleHabits('Healthy');
             $patient->setMedicationAllergies('None');
             $patient->setRegistrationDate(new \DateTime());
+            
+            // Asignar contraseña en texto plano
+            $patient->setPassword($data[8]);
+            
             $this->entityManager->persist($patient);
             $patients[] = $patient;
         }
