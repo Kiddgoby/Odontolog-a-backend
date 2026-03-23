@@ -6,10 +6,12 @@ use App\Repository\PatientRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: PatientRepository::class)]
-class Patient
+class Patient implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -67,6 +69,9 @@ class Patient
 
     #[ORM\Column]
     private ?\DateTime $registrationDate = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $password = null;
 
     /**
      * @var Collection<int, Appointment>
@@ -345,5 +350,37 @@ class Patient
         }
 
         return $this;
+    }
+
+    public function getPassword(): ?string
+    {
+        return $this->password;
+    }
+
+    public function setPassword(?string $password): static
+    {
+        $this->password = $password;
+
+        return $this;
+    }
+
+    public function getUserIdentifier(): string
+    {
+        return $this->email ?? '';
+    }
+
+    public function getRoles(): array
+    {
+        return ['ROLE_PATIENT'];
+    }
+
+    public function eraseCredentials(): void
+    {
+        // Not needed for this implementation
+    }
+
+    public function getSalt(): ?string
+    {
+        return null;
     }
 }
