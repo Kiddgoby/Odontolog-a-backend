@@ -12,6 +12,14 @@ security:
             entity:
                 class: App\Entity\Patient
                 property: email
+        app_dentist_provider:
+            entity:
+                class: App\Entity\Dentist
+                property: email
+
+        app_all_users:
+            chain:
+                providers: [app_patient_provider, app_dentist_provider]
 
     firewalls:
         dev:
