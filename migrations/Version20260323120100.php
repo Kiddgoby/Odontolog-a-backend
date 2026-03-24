@@ -25,7 +25,7 @@ final class Version20260323120100 extends AbstractMigration
 
     public function down(Schema $schema): void
     {
-        // this down() migration is auto-generated, please modify it to your needs
+        // this down() migration is auto-generated, please modify it to your needss
         $this->addSql('ALTER TABLE patient DROP COLUMN password');
     }
 }
