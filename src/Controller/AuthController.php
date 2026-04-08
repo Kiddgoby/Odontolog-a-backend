@@ -20,6 +20,7 @@ class AuthController extends AbstractController
     public function login(
         Request $request,
         DentistRepository $dentistRepo,
+        PatientRepository $patientRepo,
         LoggerInterface $logger
     ): JsonResponse {
         $data = json_decode($request->getContent(), true);
@@ -35,16 +36,20 @@ class AuthController extends AbstractController
 
         // 2. Verificar si el usuario existe
         if (!$user) {
-            // debug de si el usuario no se encuentra
             $logger->warning("Intento de login fallido: usuario con email $email no encontrado.");
-            return $this->json(['error' => 'Usuario no encontrado'], 401);
+            return $this->json([
+                'error' => 'Usuario no encontrado',
+                'debug' => "Usuario con email $email no encontrado"
+            ], 401);
         }
 
         // 3. Comparación en texto plano
         if ($user->getPassword() !== $password) {
-            // debug de contraseña incorrecta
             $logger->warning("Intento de login fallido: contraseña incorrecta para usuario con email $email.");
-            return $this->json(['error' => 'Contraseña incorrecta'], 401);
+            return $this->json([
+                'error' => 'Contraseña incorrecta',
+                'debug' => "Contraseña incorrecta para $email"
+            ], 401);
         }
 
         // Generar respuesta
