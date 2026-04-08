@@ -19,8 +19,8 @@ class AuthController extends AbstractController
     #[Route('/login', methods: ['POST'])]
     public function login(
         Request $request,
-        PatientRepository $patientRepo,
         DentistRepository $dentistRepo,
+        PatientRepository $patientRepo,
         LoggerInterface $logger
     ): JsonResponse {
         $data = json_decode($request->getContent(), true);
@@ -31,22 +31,25 @@ class AuthController extends AbstractController
             return $this->json(['error' => 'Email y contraseña son requeridos'], 400);
         }
 
-        // 1. Buscar en Pacientes
-        $user = $patientRepo->findOneBy(['email' => $email]);
+        // 1. Buscar en Dentistas
+        $user = $dentistRepo->findOneBy(['email' => $email]);
 
-        // 2. Si no es paciente, buscar en Dentistas
+        // 2. Verificar si el usuario existe
         if (!$user) {
-            $user = $dentistRepo->findOneBy(['email' => $email]);
+            $logger->warning("Intento de login fallido: usuario con email $email no encontrado.");
+            return $this->json([
+                'error' => 'Usuario no encontrado',
+                'debug' => "Usuario con email $email no encontrado"
+            ], 401);
         }
 
-        // 3. Verificar si el usuario existe
-        if (!$user) {
-            return $this->json(['error' => 'Usuario no encontrado'], 401);
-        }
-
-        // 4. Comparación en texto plano (Sin Hash)
+        // 3. Comparación en texto plano
         if ($user->getPassword() !== $password) {
-            return $this->json(['error' => 'Contraseña incorrecta'], 401);
+            $logger->warning("Intento de login fallido: contraseña incorrecta para usuario con email $email.");
+            return $this->json([
+                'error' => 'Contraseña incorrecta',
+                'debug' => "Contraseña incorrecta para $email"
+            ], 401);
         }
 
         // Generar respuesta
@@ -88,11 +91,11 @@ class AuthController extends AbstractController
         $patient->setFirstName($data['firstName'] ?? '');
         $patient->setLastName($data['lastName'] ?? '');
         $patient->setRegistrationDate(new \DateTime());
-        // ... set de otros campos obligatorios que tengas
+        // ... set de otros campos obligatorios que tengamos en la entidad Patient
 
         $em->persist($patient);
         $em->flush();
 
-        return $this->json(['status' => 'Usuario registrado en texto plano'], 201);
+        return $this->json(['status' => 'Usuario registrado con éxito'], 201);
     }
 }
