@@ -56,6 +56,7 @@ class PatientController extends AbstractController
         $patient->setFamilyHistory($data['familyHistory'] ?? '');
         $patient->setLifestyleHabits($data['lifestyleHabits'] ?? '');
         $patient->setMedicationAllergies($data['medicationAllergies'] ?? '');
+        $patient->setOdontogram($data['odontogram'] ?? null);
         $patient->setRegistrationDate(new \DateTime());
 
         $em->persist($patient);
@@ -86,6 +87,9 @@ class PatientController extends AbstractController
         $patient->setFamilyHistory($data['familyHistory'] ?? $patient->getFamilyHistory());
         $patient->setLifestyleHabits($data['lifestyleHabits'] ?? $patient->getLifestyleHabits());
         $patient->setMedicationAllergies($data['medicationAllergies'] ?? $patient->getMedicationAllergies());
+        if (array_key_exists('odontogram', $data)) {
+            $patient->setOdontogram($data['odontogram']);
+        }
 
         $em->flush();
 
