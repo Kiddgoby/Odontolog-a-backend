@@ -8,6 +8,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Serializer\Annotation\SerializedName;
 
 #[ORM\Entity(repositoryClass: TreatmentRepository::class)]
 class Treatment
@@ -23,8 +24,20 @@ class Treatment
     private ?string $treatmentName = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
-    #[Groups(['treatment:read'])]
+    #[Groups(['treatment:read', 'appointment:read'])]
     private ?string $description = null;
+
+    #[ORM\Column(length: 100)]
+    #[Groups(['treatment:read', 'appointment:read'])]
+    private ?string $category = null;
+
+    #[ORM\Column(type: Types::INTEGER)]
+    #[Groups(['treatment:read', 'appointment:read'])]
+    private ?int $duration = null;
+
+    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2)]
+    #[Groups(['treatment:read', 'appointment:read'])]
+    private ?string $price = null;
 
     /**
      * @var Collection<int, Appointment>
@@ -47,6 +60,13 @@ class Treatment
         return $this->treatmentName;
     }
 
+    #[SerializedName('name')]
+    #[Groups(['treatment:read', 'appointment:read'])]
+    public function getName(): ?string
+    {
+        return $this->treatmentName;
+    }
+
     public function setTreatmentName(string $treatmentName): static
     {
         $this->treatmentName = $treatmentName;
@@ -62,6 +82,42 @@ class Treatment
     public function setDescription(?string $description): static
     {
         $this->description = $description;
+
+        return $this;
+    }
+
+    public function getCategory(): ?string
+    {
+        return $this->category;
+    }
+
+    public function setCategory(?string $category): static
+    {
+        $this->category = $category;
+
+        return $this;
+    }
+
+    public function getDuration(): ?int
+    {
+        return $this->duration;
+    }
+
+    public function setDuration(?int $duration): static
+    {
+        $this->duration = $duration;
+
+        return $this;
+    }
+
+    public function getPrice(): ?string
+    {
+        return $this->price;
+    }
+
+    public function setPrice(?string $price): static
+    {
+        $this->price = $price;
 
         return $this;
     }

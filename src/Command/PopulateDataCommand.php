@@ -42,7 +42,6 @@ class PopulateDataCommand extends Command
 
         $io->title('Populating database with sample data...');
 
-        // 1. Boxes
         $boxes = [];
         for ($i = 1; $i <= 5; $i++) {
             $box = new Box();
@@ -53,60 +52,65 @@ class PopulateDataCommand extends Command
             $boxes[] = $box;
         }
 
-        // 2. Treatments
-        $treatmentsData = [
-            ['Cleaning', 'Professional dental cleaning'],
-            ['Filling', 'Composite dental filling'],
-            ['Root Canal', 'Endodontic treatment'],
-            ['Extraction', 'Tooth extraction'],
-            ['Whitening', 'Teeth whitening service'],
-        ];
         $treatments = [];
-        foreach ($treatmentsData as $data) {
+        $treatmentNames = ['Cleaning', 'Filling', 'Root Canal', 'Extraction', 'Whitening', 'Implant', 'Veneer', 'Crown'];
+        $treatmentCategories = ['Hygiene', 'Restorative', 'Endodontics', 'Surgery', 'Cosmetic', 'Preventive'];
+        foreach ($treatmentNames as $name) {
             $treatment = new Treatment();
-            $treatment->setTreatmentName($data[0]);
-            $treatment->setDescription($data[1]);
+            $treatment->setTreatmentName($name);
+            $treatment->setDescription($this->randomElement([
+                'Professional dental cleaning',
+                'Composite dental filling',
+                'Endodontic treatment',
+                'Tooth extraction',
+                'Teeth whitening service',
+                'Dental implant placement',
+                'Porcelain veneer application',
+                'Protective dental crown',
+            ]));
+            $treatment->setCategory($this->randomElement($treatmentCategories));
+            $treatment->setDuration($this->randomElement([30, 45, 60, 90, 120]));
+            $treatment->setPrice($this->randomPrice(50, 500));
             $this->entityManager->persist($treatment);
             $treatments[] = $treatment;
         }
 
-        // 3. Pathologies
-        $pathologiesData = ['Caries', 'Gingivitis', 'Periodontitis', 'Pulpitis', 'Fracture'];
         $pathologies = [];
-        foreach ($pathologiesData as $desc) {
+        foreach (['Caries', 'Gingivitis', 'Periodontitis', 'Pulpitis', 'Fracture', 'Abscess', 'Enamel Wear'] as $desc) {
             $pathology = new Pathology();
             $pathology->setDescription($desc);
             $this->entityManager->persist($pathology);
             $pathologies[] = $pathology;
         }
 
-        // 4. Teeth
         $teeth = [];
         for ($i = 11; $i <= 48; $i++) {
-            // Simple validation for tooth numbers (FDI system skips some)
-            if ($i % 10 > 8 || $i % 10 == 0) continue; 
+            if ($i % 10 > 8 || $i % 10 == 0) {
+                continue;
+            }
             $tooth = new Tooth();
             $tooth->setDescription("Tooth $i");
             $this->entityManager->persist($tooth);
             $teeth[] = $tooth;
         }
 
-        // 5. Dentists
-        $dentistsData = [
-            ['Juan', 'Pérez', 'General Dentistry', 'Mon-Fri', '555-0101', 'juan.perez@example.com', 'password123'],
-            ['María', 'García', 'Orthodontics', 'Tue-Thu', '555-0102', 'maria.garcia@example.com', 'password123'],
-            ['Carlos', 'Rodríguez', 'Endodontics', 'Mon,Wed,Fri', '555-0103', 'carlos.rod@example.com', 'password123'],
-        ];
         $dentists = [];
-        foreach ($dentistsData as $data) {
+        $dentistNames = [
+            ['Juan', 'Pérez', 'General Dentistry'],
+            ['María', 'García', 'Orthodontics'],
+            ['Carlos', 'Rodríguez', 'Endodontics'],
+            ['Lucía', 'Martín', 'Prosthodontics'],
+            ['Sofía', 'López', 'Pediatric Dentistry'],
+        ];
+        foreach ($dentistNames as [$first, $last, $specialty]) {
             $dentist = new Dentist();
-            $dentist->setFirstName($data[0]);
-            $dentist->setLastName($data[1]);
-            $dentist->setSpecialty($data[2]);
-            $dentist->setAvailableDays($data[3]);
-            $dentist->setPhone($data[4]);
-            $dentist->setEmail($data[5]);
-            $dentist->setPassword($data[6]); // Texto plano
+            $dentist->setFirstName($first);
+            $dentist->setLastName($last);
+            $dentist->setSpecialty($specialty);
+            $dentist->setAvailableDays($this->randomElement(['Mon-Fri', 'Tue-Thu', 'Mon,Wed,Fri', 'Wed-Sat']));
+            $dentist->setPhone($this->randomPhone());
+            $dentist->setEmail(strtolower("$first.$last@example.com"));
+            $dentist->setPassword('password123');
             $this->entityManager->persist($dentist);
             $dentists[] = $dentist;
         }
@@ -118,8 +122,32 @@ class PopulateDataCommand extends Command
             ['Ana', 'Martínez', 23456781, 'SS789', '600000003', 'ana@example.com', 34, 'Calle C, 3', 'Bill 3', 'password123'],
         ];
         $patients = [];
-        foreach ($patientsData as $data) {
+        $firstNames = ['Laura', 'Pedro', 'Ana', 'Miguel', 'Elena', 'Adrián', 'Cristina', 'Sergio', 'Marina', 'Pablo'];
+        $lastNames = ['Sánchez', 'López', 'Martínez', 'Gómez', 'Fernández', 'Ruiz', 'Domínguez', 'Torres', 'Vargas', 'Navarro'];
+        foreach (range(1, 20) as $i) {
+            $firstName = $this->randomElement($firstNames);
+            $lastName = $this->randomElement($lastNames);
             $patient = new Patient();
+            $patient->setFirstName($firstName);
+            $patient->setLastName($lastName);
+            $patient->setNationalId(10000000 + $i);
+            $patient->setSocialSecurityNumber('SS' . str_pad((string) (100 + $i), 3, '0', STR_PAD_LEFT));
+            $patient->setPhone($this->randomPhone());
+            $patient->setEmail(strtolower("$firstName.$lastName$i@example.com"));
+            $patient->setAddress($this->randomElement([
+                'Calle Mayor 12',
+                'Avenida del Sol 45',
+                'Plaza Nueva 8',
+                'Calle del Río 23',
+                'Camino Real 17',
+            ]));
+            $patient->setBillingData('Factura ' . $i);
+            $patient->setHealthStatus($this->randomElement(['Good', 'Minor issues', 'Needs follow-up']));
+            $patient->setFamilyHistory($this->randomElement(['None', 'Diabetes', 'Hypertension']));
+            $patient->setLifestyleHabits($this->randomElement(['Healthy', 'Smoker', 'Occasional alcohol']));
+            $patient->setMedicationAllergies($this->randomElement(['None', 'Penicillin', 'Aspirin']));
+            $patient->setRegistrationDate(new \DateTime('-' . $i . ' days'));
+            $patient->setPassword('password123');
             $patient->setFirstName($data[0]);
             $patient->setLastName($data[1]);
             $patient->setNationalId($data[2]);
@@ -144,45 +172,67 @@ class PopulateDataCommand extends Command
 
         $this->entityManager->flush();
 
-        // 7. Appointments & Related
         foreach ($patients as $index => $patient) {
             $appointment = new Appointment();
             $appointment->setPatient($patient);
-            $appointment->setDentist($dentists[$index % count($dentists)]);
-            $appointment->setBox($boxes[$index % count($boxes)]);
-            $appointment->setTreatment($treatments[$index % count($treatments)]);
-            $appointment->setVisitDate(new \DateTime("+".($index+1)." days"));
-            $appointment->setConsultationReason('Routine checkup');
+            $appointment->setDentist($this->randomElement($dentists));
+            $appointment->setBox($this->randomElement($boxes));
+            $appointment->setTreatment($this->randomElement($treatments));
+            $appointment->setVisitDate(new \DateTime('+' . ($index % 10) . ' days'));
+            $appointment->setConsultationReason($this->randomElement([
+                'Routine checkup',
+                'Tooth pain',
+                'Dental cleaning',
+                'Follow-up appointment',
+            ]));
             $this->entityManager->persist($appointment);
 
-            // Odontogram
             $odontogram = new Odontogram();
             $odontogram->setPatient($patient);
             $odontogram->setAppointment($appointment);
             $odontogram->setCreationDate(new \DateTime());
             $this->entityManager->persist($odontogram);
 
-            // Odontogram Detail
             $detail = new OdontogramDetail();
             $detail->setOdontogram($odontogram);
-            $detail->setTooth($teeth[array_rand($teeth)]);
-            $detail->setPathology($pathologies[array_rand($pathologies)]);
-            $detail->setNotes('Minor issue found');
+            $detail->setTooth($this->randomElement($teeth));
+            $detail->setPathology($this->randomElement($pathologies));
+            $detail->setNotes($this->randomElement([
+                'Minor issue found',
+                'Healthy enamel',
+                'Requires follow-up',
+            ]));
             $this->entityManager->persist($detail);
 
-            // Document
             $document = new Document();
             $document->setPatient($patient);
-            $document->setType('X-Ray');
-            $document->setFileUrl("https://example.com/docs/patient_$index.pdf");
-            $document->setCaptureDate(new \DateTime());
+            $document->setType($this->randomElement(['X-Ray', 'Prescription', 'Referral']));
+            $document->setFileUrl("https://example.com/docs/patient_{$index}.pdf");
+            $document->setCaptureDate(new \DateTime('-' . ($index % 7) . ' days'));
             $this->entityManager->persist($document);
         }
 
         $this->entityManager->flush();
 
-        $io->success('Database populated successfully!');
+        $io->success('Database populated successfully with fake data!');
 
         return Command::SUCCESS;
+    }
+
+    private function randomElement(array $items)
+    {
+        return $items[array_rand($items)];
+    }
+
+    private function randomPhone(): string
+    {
+        return sprintf('6%03d%03d', mt_rand(100, 999), mt_rand(100, 999));
+    }
+
+    private function randomPrice(int $min, int $max): string
+    {
+        $cents = mt_rand(0, 99);
+        $amount = mt_rand($min, $max) + ($cents / 100);
+        return number_format($amount, 2, '.', '');
     }
 }
