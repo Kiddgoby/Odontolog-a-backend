@@ -31,8 +31,11 @@ class TreatmentController extends AbstractController
         $data = json_decode($request->getContent(), true);
 
         $treatment = new Treatment();
-        $treatment->setTreatmentName($data['treatmentName']);
+        $treatment->setTreatmentName($data['treatmentName'] ?? '');
         $treatment->setDescription($data['description'] ?? null);
+        $treatment->setCategory($data['category'] ?? '');
+        $treatment->setDuration(isset($data['duration']) ? (int) $data['duration'] : 0);
+        $treatment->setPrice(isset($data['price']) ? (string) $data['price'] : '0.00');
 
         $em->persist($treatment);
         $em->flush();
@@ -45,8 +48,11 @@ class TreatmentController extends AbstractController
     {
         $data = json_decode($request->getContent(), true);
 
-        $treatment->setTreatmentName($data['treatmentName']);
-        $treatment->setDescription($data['description'] ?? null);
+        $treatment->setTreatmentName($data['treatmentName'] ?? $treatment->getTreatmentName());
+        $treatment->setDescription($data['description'] ?? $treatment->getDescription());
+        $treatment->setCategory($data['category'] ?? $treatment->getCategory());
+        $treatment->setDuration(isset($data['duration']) ? (int) $data['duration'] : $treatment->getDuration());
+        $treatment->setPrice(isset($data['price']) ? (string) $data['price'] : $treatment->getPrice());
 
         $em->flush();
 
