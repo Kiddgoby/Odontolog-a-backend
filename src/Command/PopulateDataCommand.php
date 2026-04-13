@@ -115,6 +115,12 @@ class PopulateDataCommand extends Command
             $dentists[] = $dentist;
         }
 
+        // 6. Patients
+        $patientsData = [
+            ['Laura', 'Sánchez', 12345678, 'SS123', '600000001', 'laura@example.com', 8, 'Calle A, 1', 'Bill 1', 'password123'],
+            ['Pedro', 'López', 87654321, 'SS456', '600000002', 'pedro@example.com', 12, 'Calle B, 2', 'Bill 2', 'password123'],
+            ['Ana', 'Martínez', 23456781, 'SS789', '600000003', 'ana@example.com', 34, 'Calle C, 3', 'Bill 3', 'password123'],
+        ];
         $patients = [];
         $firstNames = ['Laura', 'Pedro', 'Ana', 'Miguel', 'Elena', 'Adrián', 'Cristina', 'Sergio', 'Marina', 'Pablo'];
         $lastNames = ['Sánchez', 'López', 'Martínez', 'Gómez', 'Fernández', 'Ruiz', 'Domínguez', 'Torres', 'Vargas', 'Navarro'];
@@ -142,6 +148,24 @@ class PopulateDataCommand extends Command
             $patient->setMedicationAllergies($this->randomElement(['None', 'Penicillin', 'Aspirin']));
             $patient->setRegistrationDate(new \DateTime('-' . $i . ' days'));
             $patient->setPassword('password123');
+            $patient->setFirstName($data[0]);
+            $patient->setLastName($data[1]);
+            $patient->setNationalId($data[2]);
+            $patient->setSocialSecurityNumber($data[3]);
+            $patient->setPhone($data[4]);
+            $patient->setEmail($data[5]);
+            $patient->setAge($data[6]);
+            $patient->setAddress($data[7]);
+            $patient->setBillingData($data[8]);
+            $patient->setHealthStatus('Good');
+            $patient->setFamilyHistory('None');
+            $patient->setLifestyleHabits('Healthy');
+            $patient->setMedicationAllergies('None');
+            $patient->setRegistrationDate(new \DateTime());
+            
+            // Asignar contraseña en texto plano
+            $patient->setPassword($data[9]);
+            
             $this->entityManager->persist($patient);
             $patients[] = $patient;
         }
