@@ -98,9 +98,6 @@ class Patient implements UserInterface, PasswordAuthenticatedUserInterface
     #[Groups(['patient:read'])]
     private Collection $documents;
 
-    #[ORM\Column(type: 'json', nullable: true)]
-    #[Groups(['patient:read'])]
-    private ?array $odontogram = null;
 
     public function __construct()
     {
@@ -404,15 +401,4 @@ class Patient implements UserInterface, PasswordAuthenticatedUserInterface
         return null;
     }
 
-    public function getOdontogram(): ?array
-    {
-        return $this->odontogram;
-    }
-
-    public function setOdontogram(?array $odontogram): static
-    {
-        $this->odontogram = $odontogram;
-
-        return $this;
-    }
 }
