@@ -95,6 +95,7 @@ class PatientController extends AbstractController
 
             // Sincronizar con la tabla odontogram_detail
             $odontogramJson = $data['odontogram'];
+            error_log("DEBUG: Odontogram JSON received: " . json_encode($odontogramJson));
             if (isset($odontogramJson['teeth']) && is_array($odontogramJson['teeth'])) {
                 $odontogramRepo = $em->getRepository(Odontogram::class);
                 $toothRepo = $em->getRepository(Tooth::class);
@@ -118,11 +119,18 @@ class PatientController extends AbstractController
                 }
 
                 if ($relationalOdontogram) {
+                    error_log("DEBUG: Relational Odontogram ID: " . $relationalOdontogram->getId());
                     foreach ($odontogramJson['teeth'] as $toothId => $state) {
-                        $isMarked = (!empty($state['sections'])) || (isset($state['absent']) && $state['absent']);
+                        $isMarked = (!empty($state['sections'])) || 
+                                    (isset($state['absent']) && $state['absent']) ||
+                                    (!empty($state['note'])) ||
+                                    (!empty($state['sectionNotes']));
                         
                         $tooth = $toothRepo->find((int)$toothId);
-                        if (!$tooth) continue;
+                        if (!$tooth) {
+                            error_log("DEBUG: Tooth NOT found for ID: " . $toothId);
+                            continue;
+                        }
 
                         $detail = $em->getRepository(OdontogramDetail::class)->findOneBy([
                             'odontogram' => $relationalOdontogram,
@@ -130,6 +138,7 @@ class PatientController extends AbstractController
                         ]);
 
                         if ($isMarked) {
+                            error_log("DEBUG: Processing tooth: " . $toothId);
                             if (!$detail) {
                                 $detail = new OdontogramDetail();
                                 $detail->setOdontogram($relationalOdontogram);
@@ -152,25 +161,91 @@ class PatientController extends AbstractController
                                 if ($pathology) {
                                     $detail->setPathology($pathology);
                                 }
+                            } elseif (!$detail->getPathology()) {
+                                // Si no tiene patología asignada aún y no hay color, asignar una por defecto (Caries)
+                                $pathology = $pathologyRepo->find(3); 
+                                if ($pathology) {
+                                    $detail->setPathology($pathology);
+                                }
                             }
 
-                            // Sincronizar notas
+                            // Sincronizar notas y cara
                             $combinedNotes = [];
+                            $caras = [];
+                            
+                            $sectionMapping = [
+                                's1' => 'Superior (Vestibular)',
+                                's2' => 'Derecha',
+                                's3' => 'Inferior (Palatino/Lingual)',
+                                's4' => 'Izquierda',
+                                's5' => 'Centro (Oclusal)',
+                                'absent' => 'Ausencia'
+                            ];
+
+                            // Revisar si hay nota general por diente
                             if (isset($state['note']) && !empty($state['note'])) {
-                                $combinedNotes[] = $state['note'];
+                                $note = $state['note'];
+                                
+                                // Buscar si la cara está en la nota (formato: "cara: Oclusal | ...")
+                                if (preg_match('/Sec\s+(?:cara|face)\s*:\s*([^|]+)/i', $note, $matches)) {
+                                    $caras[] = trim($matches[1]);
+                                    // Remover la cara de la nota
+                                    $note = preg_replace('/\s*\|\s*Sec\s+(?:cara|face)\s*:\s*[^|]+/i', '', $note);
+                                    $note = preg_replace('/^Sec\s+(?:cara|face)\s*:\s*[^|]+\s*\|\s*/i', '', $note);
+                                    if (!empty($note)) {
+                                        $combinedNotes[] = $note;
+                                    }
+                                } else {
+                                    $combinedNotes[] = $note;
+                                }
                             }
+                            
+                            // 1. Recoger caras de las secciones marcadas (tengan nota o no)
+                            if (isset($state['sections']) && is_array($state['sections'])) {
+                                foreach ($state['sections'] as $section => $color) {
+                                    $caras[] = $sectionMapping[$section] ?? $section;
+                                }
+                            }
+
+                            // 2. Recoger notas de las secciones y añadir caras adicionales si existen
                             if (isset($state['sectionNotes']) && is_array($state['sectionNotes'])) {
                                 foreach ($state['sectionNotes'] as $section => $secNote) {
                                     if (!empty($secNote)) {
-                                        $combinedNotes[] = "Sec $section: $secNote";
+                                        if (strtolower($section) === 'cara' || strtolower($section) === 'face') {
+                                            $caras[] = $secNote;
+                                        } else {
+                                            // Si no estaba ya en caras, añadirla
+                                            $faceName = $sectionMapping[$section] ?? $section;
+                                            if (!in_array($faceName, $caras)) {
+                                                $caras[] = $faceName;
+                                            }
+                                            $combinedNotes[] = $secNote;
+                                        }
                                     }
                                 }
                             }
+
+                            // Si es ausencia, añadir a caras
+                            if (isset($state['absent']) && $state['absent']) {
+                                if (!in_array('Ausencia', $caras)) {
+                                    $caras[] = 'Ausencia';
+                                }
+                            }
+
+                            // Quitar duplicados en caras
+                            $caras = array_unique($caras);
 
                             if (!empty($combinedNotes)) {
                                 $detail->setNotes(implode(' | ', $combinedNotes));
                             } else {
                                 $detail->setNotes(null);
+                            }
+                            
+                            // Guardar cara en el campo face
+                            if (!empty($caras)) {
+                                $detail->setFace(implode(', ', $caras));
+                            } else {
+                                $detail->setFace(null);
                             }
                         } else {
                             if ($detail) {
@@ -178,6 +253,8 @@ class PatientController extends AbstractController
                             }
                         }
                     }
+                } else {
+                    error_log("DEBUG: No relational odontogram found or created for patient.");
                 }
             }
         }
