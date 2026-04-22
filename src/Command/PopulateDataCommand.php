@@ -149,23 +149,6 @@ class PopulateDataCommand extends Command
             $patient->setMedicationAllergies($this->randomElement(['None', 'Penicillin', 'Aspirin']));
             $patient->setRegistrationDate(new \DateTime('-' . $i . ' days'));
             $patient->setPassword('password123');
-            $patient->setFirstName($data[0]);
-            $patient->setLastName($data[1]);
-            $patient->setNationalId($data[2]);
-            $patient->setSocialSecurityNumber($data[3]);
-            $patient->setPhone($data[4]);
-            $patient->setEmail($data[5]);
-            $patient->setAge($data[6]);
-            $patient->setAddress($data[7]);
-            $patient->setBillingData($data[8]);
-            $patient->setHealthStatus('Good');
-            $patient->setFamilyHistory('None');
-            $patient->setLifestyleHabits('Healthy');
-            $patient->setMedicationAllergies('None');
-            $patient->setRegistrationDate(new \DateTime());
-            
-            // Asignar contraseña en texto plano
-            $patient->setPassword($data[9]);
             
             $this->entityManager->persist($patient);
             $patients[] = $patient;
