@@ -19,8 +19,11 @@ final class Version20260415170000 extends AbstractMigration
 
     public function up(Schema $schema): void
     {
-        // Eliminar la columna odontogram de la tabla patient
-        $this->addSql('ALTER TABLE patient DROP odontogram');
+        // Eliminar la columna odontogram de la tabla patient si existe
+        $table = $schema->getTable('patient');
+        if ($table->hasColumn('odontogram')) {
+            $this->addSql('ALTER TABLE patient DROP COLUMN odontogram');
+        }
     }
 
     public function down(Schema $schema): void
