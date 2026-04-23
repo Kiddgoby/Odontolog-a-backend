@@ -62,9 +62,14 @@ class TreatmentController extends AbstractController
     #[Route('/{id}', methods: ['DELETE'])]
     public function delete(Treatment $treatment, EntityManagerInterface $em): JsonResponse
     {
-        $em->remove($treatment);
-        $em->flush();
-
-        return $this->json(null, 204);
+        try {
+            // Doctrine manejará automáticamente la cascada de eliminación
+            // Simplemente eliminamos el tratamiento y las citas asociadas se eliminarán automáticamente
+            $em->remove($treatment);
+            $em->flush();
+            return $this->json(['message' => 'Tratamiento eliminado exitosamente'], 200);
+        } catch (\Exception $e) {
+            return $this->json(['error' => $e->getMessage()], 400);
+        }
     }
 }
