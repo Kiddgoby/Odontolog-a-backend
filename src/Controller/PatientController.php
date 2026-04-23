@@ -46,6 +46,7 @@ class PatientController extends AbstractController
         $patient->setFirstName($data['firstName'] ?? '');
         $patient->setLastName($data['lastName'] ?? '');
         $patient->setNationalId($data['nationalId'] ?? 0);
+        $patient->setAge(isset($data['age']) ? (int) $data['age'] : null);
         $patient->setSocialSecurityNumber($data['socialSecurityNumber'] ?? '');
         $patient->setPhone($data['phone'] ?? '');
         $patient->setEmail($data['email'] ?? '');
@@ -55,6 +56,7 @@ class PatientController extends AbstractController
         $patient->setFamilyHistory($data['familyHistory'] ?? '');
         $patient->setLifestyleHabits($data['lifestyleHabits'] ?? '');
         $patient->setMedicationAllergies($data['medicationAllergies'] ?? '');
+        $patient->setOdontogram($data['odontogram'] ?? null);
         $patient->setRegistrationDate(new \DateTime());
 
         $em->persist($patient);
@@ -75,6 +77,7 @@ class PatientController extends AbstractController
         $patient->setFirstName($data['firstName'] ?? $patient->getFirstName());
         $patient->setLastName($data['lastName'] ?? $patient->getLastName());
         $patient->setNationalId($data['nationalId'] ?? $patient->getNationalId());
+        $patient->setAge(array_key_exists('age', $data) ? (int) $data['age'] : $patient->getAge());
         $patient->setSocialSecurityNumber($data['socialSecurityNumber'] ?? $patient->getSocialSecurityNumber());
         $patient->setPhone($data['phone'] ?? $patient->getPhone());
         $patient->setEmail($data['email'] ?? $patient->getEmail());
@@ -84,6 +87,9 @@ class PatientController extends AbstractController
         $patient->setFamilyHistory($data['familyHistory'] ?? $patient->getFamilyHistory());
         $patient->setLifestyleHabits($data['lifestyleHabits'] ?? $patient->getLifestyleHabits());
         $patient->setMedicationAllergies($data['medicationAllergies'] ?? $patient->getMedicationAllergies());
+        if (array_key_exists('odontogram', $data)) {
+            $patient->setOdontogram($data['odontogram']);
+        }
 
         $em->flush();
 
