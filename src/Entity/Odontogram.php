@@ -35,7 +35,7 @@ class Odontogram
     /**
      * @var Collection<int, OdontogramDetail>
      */
-    #[ORM\OneToMany(targetEntity: OdontogramDetail::class, mappedBy: 'odontogram')]
+    #[ORM\OneToMany(targetEntity: OdontogramDetail::class, mappedBy: 'odontogram', cascade: ['remove'])]
     #[Groups(['odontogram:read'])]
     private Collection $odontogramDetails;
 
