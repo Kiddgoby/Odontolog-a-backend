@@ -10,22 +10,22 @@ use Doctrine\Migrations\AbstractMigration;
 /**
  * Auto-generated Migration: Please modify to your needs!
  */
-final class Version20260323120100 extends AbstractMigration
+final class Version20260422134352 extends AbstractMigration
 {
     public function getDescription(): string
     {
-        return 'Add password field to patient table';
+        return '';
     }
 
     public function up(Schema $schema): void
     {
         // this up() migration is auto-generated, please modify it to your needs
-        $this->addSql('ALTER TABLE patient ADD password VARCHAR(255) DEFAULT NULL');
+        $this->addSql('ALTER TABLE odontogram_detail ADD cara VARCHAR(50) DEFAULT NULL');
     }
 
     public function down(Schema $schema): void
     {
-        // this down() migration is auto-generated, please modify it to your needss
-        $this->addSql('ALTER TABLE patient DROP COLUMN password');
+        // this up() migration is auto-generated, please modify it to your needs
+        $this->addSql('ALTER TABLE odontogram_detail DROP cara');
     }
 }

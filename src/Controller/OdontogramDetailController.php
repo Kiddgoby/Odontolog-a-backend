@@ -63,6 +63,190 @@ class OdontogramDetailController extends AbstractController
         return $this->json(null, 204);
     }
 
+    #[Route('/update-notes', methods: ['POST'])]
+    public function updateNotes(Request $request, EntityManagerInterface $em): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+
+        // Logging para depuración
+        error_log("DEBUG: Datos recibidos: " . json_encode($data));
+
+        // Validar datos requeridos
+        if (!isset($data['odontogramId']) || !isset($data['toothId'])) {
+            error_log("ERROR: Faltan campos requeridos");
+            return $this->json(['error' => 'Missing required fields: odontogramId, toothId'], 400);
+        }
+
+        error_log("DEBUG: Buscando detalle para odontogramaId={$data['odontogramId']}, toothId={$data['toothId']}");
+
+        // Buscar si ya existe un detalle para este odontograma y diente
+        $detail = $em->getRepository(OdontogramDetail::class)->findOneBy([
+            'odontogram' => $data['odontogramId'],
+            'tooth' => $data['toothId']
+        ]);
+
+        if (!$detail) {
+            error_log("DEBUG: No existe detalle, creando nuevo");
+            // Crear nuevo detalle si no existe
+            $detail = new OdontogramDetail();
+            
+            // Asignar odontograma
+            $odontogram = $em->getRepository(Odontogram::class)->find($data['odontogramId']);
+            if (!$odontogram) {
+                error_log("ERROR: Odontogram no encontrado con ID={$data['odontogramId']}");
+                return $this->json(['error' => 'Odontogram not found'], 404);
+            }
+            $detail->setOdontogram($odontogram);
+            error_log("DEBUG: Odontogram asignado correctamente");
+
+            // Asignar diente
+            $tooth = $em->getRepository(Tooth::class)->find($data['toothId']);
+            if (!$tooth) {
+                error_log("ERROR: Diente no encontrado con ID={$data['toothId']}");
+                return $this->json(['error' => 'Tooth not found'], 404);
+            }
+            $detail->setTooth($tooth);
+            error_log("DEBUG: Diente asignado correctamente - ID: {$tooth->getId()}, Description: {$tooth->getDescription()}");
+
+            // Asignar patología por defecto (puedes ajustar esto según necesites)
+            $pathology = $em->getRepository(Pathology::class)->find(1); // ID 1 como patología por defecto
+            if ($pathology) {
+                $detail->setPathology($pathology);
+                error_log("DEBUG: Patología por defecto asignada");
+            } else {
+                error_log("WARNING: No se encontró patología con ID=1");
+            }
+
+            $em->persist($detail);
+        } else {
+            error_log("DEBUG: Detalle existente encontrado - ID: {$detail->getId()}");
+        }
+
+        // Actualizar las notas si se proporciona
+        if (isset($data['notes'])) {
+            $detail->setNotes($data['notes']);
+            error_log("DEBUG: Notas actualizadas: '{$data['notes']}'");
+        }
+        
+        // Actualizar la cara si se proporciona
+        if (isset($data['cara'])) {
+            $detail->setFace($data['cara']);
+            error_log("DEBUG: Face actualizada: '{$data['cara']}'");
+        }
+        
+        $em->flush();
+        error_log("DEBUG: Cambios guardados en base de datos");
+
+        return $this->json([
+            'success' => true,
+            'message' => 'Notes updated successfully',
+            'detail' => [
+                'id' => $detail->getId(),
+                'odontogramId' => $detail->getOdontogram()->getId(),
+                'toothId' => $detail->getTooth()->getId(),
+                'toothDescription' => $detail->getTooth()->getDescription(),
+                'notes' => $detail->getNotes(),
+                'face' => $detail->getFace()
+            ]
+        ]);
+    }
+
+    #[Route('/get-notes/{odontogramId}/{toothId}', methods: ['GET'])]
+    public function getNotes(int $odontogramId, int $toothId, EntityManagerInterface $em): JsonResponse
+    {
+        // Buscar el detalle para este odontograma y diente
+        $detail = $em->getRepository(OdontogramDetail::class)->findOneBy([
+            'odontogram' => $odontogramId,
+            'tooth' => $toothId
+        ]);
+
+        if (!$detail) {
+            return $this->json([
+                'success' => true,
+                'notes' => null,
+                'message' => 'No notes found for this tooth'
+            ]);
+        }
+
+        return $this->json([
+            'success' => true,
+            'notes' => $detail->getNotes(),
+            'face' => $detail->getFace(),
+            'detailId' => $detail->getId()
+        ]);
+    }
+
+    #[Route('/update-cara', methods: ['POST'])]
+    public function updateCara(Request $request, EntityManagerInterface $em): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+
+        // Logging para depuración
+        error_log("DEBUG: Datos recibidos para cara: " . json_encode($data));
+
+        // Validar datos requeridos
+        if (!isset($data['odontogramId']) || !isset($data['toothId']) || !isset($data['cara'])) {
+            error_log("ERROR: Faltan campos requeridos");
+            return $this->json(['error' => 'Missing required fields: odontogramId, toothId, cara'], 400);
+        }
+
+        error_log("DEBUG: Buscando detalle para odontogramaId={$data['odontogramId']}, toothId={$data['toothId']}");
+
+        // Buscar si ya existe un detalle para este odontograma y diente
+        $detail = $em->getRepository(OdontogramDetail::class)->findOneBy([
+            'odontogram' => $data['odontogramId'],
+            'tooth' => $data['toothId']
+        ]);
+
+        if (!$detail) {
+            error_log("DEBUG: No existe detalle, creando nuevo");
+            // Crear nuevo detalle si no existe
+            $detail = new OdontogramDetail();
+            
+            // Asignar odontograma
+            $odontogram = $em->getRepository(Odontogram::class)->find($data['odontogramId']);
+            if (!$odontogram) {
+                error_log("ERROR: Odontogram no encontrado con ID={$data['odontogramId']}");
+                return $this->json(['error' => 'Odontogram not found'], 404);
+            }
+            $detail->setOdontogram($odontogram);
+
+            // Asignar diente
+            $tooth = $em->getRepository(Tooth::class)->find($data['toothId']);
+            if (!$tooth) {
+                error_log("ERROR: Diente no encontrado con ID={$data['toothId']}");
+                return $this->json(['error' => 'Tooth not found'], 404);
+            }
+            $detail->setTooth($tooth);
+
+            // Asignar patología por defecto
+            $pathology = $em->getRepository(Pathology::class)->find(1);
+            if ($pathology) {
+                $detail->setPathology($pathology);
+            }
+
+            $em->persist($detail);
+        }
+
+        // Actualizar la cara
+        $detail->setFace($data['cara']);
+        error_log("DEBUG: Face actualizada: '{$data['cara']}'");
+        
+        $em->flush();
+        error_log("DEBUG: Cambios guardados en base de datos");
+
+        return $this->json([
+            'success' => true,
+            'message' => 'Face updated successfully',
+            'detail' => [
+                'id' => $detail->getId(),
+                'odontogramId' => $detail->getOdontogram()->getId(),
+                'toothId' => $detail->getTooth()->getId(),
+                'face' => $detail->getFace()
+            ]
+        ]);
+    }
+
     private function mapDataToDetail(OdontogramDetail $detail, array $data, EntityManagerInterface $em): void
     {
         if (isset($data['odontogramId'])) {
@@ -82,6 +266,10 @@ class OdontogramDetailController extends AbstractController
 
         if (isset($data['notes'])) {
             $detail->setNotes($data['notes']);
+        }
+
+        if (isset($data['cara'])) {
+            $detail->setFace($data['cara']);
         }
     }
 }

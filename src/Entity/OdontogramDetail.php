@@ -35,6 +35,10 @@ class OdontogramDetail
     #[Groups(['odontogram:read'])]
     private ?string $notes = null;
 
+    #[ORM\Column(length: 50, nullable: true)]
+    #[Groups(['odontogram:read'])]
+    private ?string $cara = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -84,6 +88,18 @@ class OdontogramDetail
     public function setNotes(?string $notes): static
     {
         $this->notes = $notes;
+
+        return $this;
+    }
+
+    public function getCara(): ?string
+    {
+        return $this->cara;
+    }
+
+    public function setCara(?string $cara): static
+    {
+        $this->cara = $cara;
 
         return $this;
     }
