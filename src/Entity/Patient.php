@@ -27,9 +27,9 @@ class Patient implements UserInterface, PasswordAuthenticatedUserInterface
     #[Groups(['patient:read', 'appointment:read'])]
     private ?string $lastName = null;
 
-    #[ORM\Column]
+    #[ORM\Column(length: 20)]
     #[Groups(['patient:read'])]
-    private ?int $nationalId = null;
+    private ?string $nationalId = null;
 
     #[ORM\Column(nullable: true)]
     #[Groups(['patient:read'])]
@@ -135,12 +135,12 @@ class Patient implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function getNationalId(): ?int
+    public function getNationalId(): ?string
     {
         return $this->nationalId;
     }
 
-    public function setNationalId(int $nationalId): static
+    public function setNationalId(string $nationalId): static
     {
         $this->nationalId = $nationalId;
 

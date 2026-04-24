@@ -38,7 +38,7 @@ class Appointment
     #[Groups(['appointment:read', 'patient:read'])]
     private ?Treatment $treatment = null;
 
-    #[ORM\Column(type: Types::DATE_MUTABLE)]
+    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     #[Groups(['appointment:read', 'patient:read'])]
     private ?\DateTimeInterface $visitDate = null;
 

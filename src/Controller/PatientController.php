@@ -50,7 +50,7 @@ class PatientController extends AbstractController
         $patient = new Patient();
         $patient->setFirstName($data['firstName'] ?? '');
         $patient->setLastName($data['lastName'] ?? '');
-        $patient->setNationalId($data['nationalId'] ?? 0);
+        $patient->setNationalId($data['nationalId'] ?? '');
         $patient->setAge(isset($data['age']) ? (int) $data['age'] : null);
         $patient->setSocialSecurityNumber($data['socialSecurityNumber'] ?? '');
         $patient->setPhone($data['phone'] ?? '');
