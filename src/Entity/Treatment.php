@@ -42,7 +42,7 @@ class Treatment
     /**
      * @var Collection<int, Appointment>
      */
-    #[ORM\OneToMany(targetEntity: Appointment::class, mappedBy: 'treatment')]
+    #[ORM\OneToMany(targetEntity: Appointment::class, mappedBy: 'treatment', cascade: ['remove'])]
     private Collection $appointments;
 
     public function __construct()

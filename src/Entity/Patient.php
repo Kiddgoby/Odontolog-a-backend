@@ -81,21 +81,18 @@ class Patient implements UserInterface, PasswordAuthenticatedUserInterface
      * @var Collection<int, Appointment>
      */
     #[ORM\OneToMany(targetEntity: Appointment::class, mappedBy: 'patient', orphanRemoval: true)]
-    #[Groups(['patient:read'])]
     private Collection $appointments;
 
     /**
      * @var Collection<int, Odontogram>
      */
     #[ORM\OneToMany(targetEntity: Odontogram::class, mappedBy: 'patient', orphanRemoval: true)]
-    #[Groups(['patient:read'])]
     private Collection $odontograms;
 
     /**
      * @var Collection<int, Document>
      */
     #[ORM\OneToMany(targetEntity: Document::class, mappedBy: 'patient', orphanRemoval: true)]
-    #[Groups(['patient:read'])]
     private Collection $documents;
 
 
