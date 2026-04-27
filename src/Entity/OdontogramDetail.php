@@ -27,9 +27,14 @@ class OdontogramDetail
     private ?Tooth $tooth = null;
 
     #[ORM\ManyToOne(inversedBy: 'odontogramDetails')]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(nullable: true)]
     #[Groups(['odontogram:read'])]
     private ?Pathology $pathology = null;
+
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(nullable: true)]
+    #[Groups(['odontogram:read'])]
+    private ?Treatment $treatment = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     #[Groups(['odontogram:read'])]
@@ -76,6 +81,18 @@ class OdontogramDetail
     public function setPathology(?Pathology $pathology): static
     {
         $this->pathology = $pathology;
+
+        return $this;
+    }
+
+    public function getTreatment(): ?Treatment
+    {
+        return $this->treatment;
+    }
+
+    public function setTreatment(?Treatment $treatment): static
+    {
+        $this->treatment = $treatment;
 
         return $this;
     }
