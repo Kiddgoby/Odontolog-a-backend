@@ -6,6 +6,7 @@ use App\Entity\OdontogramDetail;
 use App\Entity\Odontogram;
 use App\Entity\Tooth;
 use App\Entity\Pathology;
+use App\Entity\Treatment;
 use App\Repository\OdontogramDetailRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -261,7 +262,16 @@ class OdontogramDetailController extends AbstractController
 
         if (isset($data['pathologyId'])) {
             $pathology = $em->getRepository(Pathology::class)->find($data['pathologyId']);
-            if ($pathology) $detail->setPathology($pathology);
+            if ($pathology) {
+                $detail->setPathology($pathology);
+            }
+        }
+
+        if (isset($data['treatmentId'])) {
+            $treatment = $em->getRepository(Treatment::class)->find($data['treatmentId']);
+            if ($treatment) {
+                $detail->setTreatment($treatment);
+            }
         }
 
         if (isset($data['notes'])) {
