@@ -52,6 +52,16 @@ class Dentist implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(targetEntity: Appointment::class, mappedBy: 'dentist', orphanRemoval: true)]
     private Collection $appointments;
 
+    #[ORM\ManyToOne(targetEntity: Box::class)]
+    #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['dentist:read'])]
+    private ?Box $box = null;
+
+    #[ORM\ManyToOne(targetEntity: Pathology::class)]
+    #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['dentist:read'])]
+    private ?Pathology $pathology = null;
+
     public function __construct()
     {
         $this->appointments = new ArrayCollection();
@@ -172,6 +182,30 @@ class Dentist implements UserInterface, PasswordAuthenticatedUserInterface
                 $appointment->setDentist(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getBox(): ?Box
+    {
+        return $this->box;
+    }
+
+    public function setBox(?Box $box): static
+    {
+        $this->box = $box;
+
+        return $this;
+    }
+
+    public function getPathology(): ?Pathology
+    {
+        return $this->pathology;
+    }
+
+    public function setPathology(?Pathology $pathology): static
+    {
+        $this->pathology = $pathology;
 
         return $this;
     }

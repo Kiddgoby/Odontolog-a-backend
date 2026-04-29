@@ -43,7 +43,7 @@ class PopulateDataCommand extends Command
         $io->title('Populating database with sample data...');
 
         $boxes = [];
-        for ($i = 1; $i <= 5; $i++) {
+        for ($i = 1; $i <= 3; $i++) {
             $box = new Box();
             $box->setName("Box $i");
             $box->setCapacity(1);
@@ -101,8 +101,9 @@ class PopulateDataCommand extends Command
             ['Carlos', 'Rodríguez', 'Endodontics'],
             ['Lucía', 'Martín', 'Prosthodontics'],
             ['Sofía', 'López', 'Pediatric Dentistry'],
+            ['Diego', 'Hernández', 'Oral Surgery'],
         ];
-        foreach ($dentistNames as [$first, $last, $specialty]) {
+        foreach ($dentistNames as $index => [$first, $last, $specialty]) {
             $dentist = new Dentist();
             $dentist->setFirstName($first);
             $dentist->setLastName($last);
@@ -110,7 +111,10 @@ class PopulateDataCommand extends Command
             $dentist->setAvailableDays($this->randomElement(['Mon-Fri', 'Tue-Thu', 'Mon,Wed,Fri', 'Wed-Sat']));
             $dentist->setPhone($this->randomPhone());
             $dentist->setEmail(strtolower("$first.$last@example.com"));
-            $dentist->setPassword('password123');
+            $dentist->setPassword($this->passwordHasher->hashPassword($dentist, 'password123'));
+            // Assign box and pathology
+            $dentist->setBox($boxes[$index % count($boxes)]);
+            $dentist->setPathology($pathologies[$index % count($pathologies)]);
             $this->entityManager->persist($dentist);
             $dentists[] = $dentist;
         }
@@ -148,7 +152,7 @@ class PopulateDataCommand extends Command
             $patient->setLifestyleHabits($this->randomElement(['Healthy', 'Smoker', 'Occasional alcohol']));
             $patient->setMedicationAllergies($this->randomElement(['None', 'Penicillin', 'Aspirin']));
             $patient->setRegistrationDate(new \DateTime('-' . $i . ' days'));
-            $patient->setPassword('password123');
+            $patient->setPassword($this->passwordHasher->hashPassword($patient, 'password123'));
             
             $this->entityManager->persist($patient);
             $patients[] = $patient;
