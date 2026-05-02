@@ -7,6 +7,8 @@ use App\Entity\Odontogram;
 use App\Entity\OdontogramDetail;
 use App\Entity\Tooth;
 use App\Entity\Pathology;
+use App\Entity\Treatment;
+use App\Entity\Status;
 use App\Entity\Appointment;
 use App\Repository\PatientRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -18,9 +20,6 @@ use Symfony\Component\Routing\Annotation\Route;
 #[Route('/api/patients')]
 class PatientController extends AbstractController
 {
-    // ===========
-    // LISTAR
-    // ===========
 
     #[Route('', methods: ['GET'])]
     public function index(PatientRepository $repo): JsonResponse
@@ -28,19 +27,13 @@ class PatientController extends AbstractController
         return $this->json($repo->findAll(), 200, [], ['groups' => 'patient:read']);
     }
 
-    // ===========
-    // VER UNO
-    // ===========
-
     #[Route('/{id}', methods: ['GET'])]
     public function show(Patient $patient): JsonResponse
     {
         return $this->json($patient, 200, [], ['groups' => 'patient:read']);
     }
 
-    // ===========
-    // CREAR
-    // ===========
+
 
     #[Route('', methods: ['POST'])]
     public function create(Request $request, EntityManagerInterface $em): JsonResponse
@@ -69,9 +62,6 @@ class PatientController extends AbstractController
         return $this->json($patient, 201, [], ['groups' => 'patient:read']);
     }
 
-    // ===========
-    // ACTUALIZAR
-    // ===========
 
     #[Route('/{id}', methods: ['PUT'])]
     public function update(Patient $patient, Request $request, EntityManagerInterface $em): JsonResponse
@@ -93,7 +83,6 @@ class PatientController extends AbstractController
         $patient->setMedicationAllergies($data['medicationAllergies'] ?? $patient->getMedicationAllergies());
         if (array_key_exists('odontogram', $data)) {
 
-            // Sincronizar con la tabla odontogram_detail
             $odontogramJson = $data['odontogram'];
             error_log("DEBUG: Odontogram JSON received: " . json_encode($odontogramJson));
             if (isset($odontogramJson['teeth']) && is_array($odontogramJson['teeth'])) {
@@ -101,10 +90,8 @@ class PatientController extends AbstractController
                 $toothRepo = $em->getRepository(Tooth::class);
                 $pathologyRepo = $em->getRepository(Pathology::class);
 
-                // Buscamos un odontograma relacional existente para este paciente
                 $relationalOdontogram = $odontogramRepo->findOneBy(['patient' => $patient], ['creationDate' => 'DESC']);
 
-                // Si no existe, intentamos buscar su última cita para crear uno
                 if (!$relationalOdontogram) {
                     $appointmentRepo = $em->getRepository(Appointment::class);
                     $latestAppointment = $appointmentRepo->findOneBy(['patient' => $patient], ['visitDate' => 'DESC']);
@@ -119,137 +106,95 @@ class PatientController extends AbstractController
                 }
 
                 if ($relationalOdontogram) {
-                    error_log("DEBUG: Relational Odontogram ID: " . $relationalOdontogram->getId());
+                    $detailRepo = $em->getRepository(OdontogramDetail::class);
+                    $toothRepo = $em->getRepository(Tooth::class);
+                    $pathologyRepo = $em->getRepository(Pathology::class);
+                    $treatmentRepo = $em->getRepository(Treatment::class);
+                    $statusRepo = $em->getRepository(Status::class);
+
+                    $sectionMapping = [
+                        's1' => 'Superior (Vestibular)',
+                        's2' => 'Derecha',
+                        's3' => 'Inferior (Palatino/Lingual)',
+                        's4' => 'Izquierda',
+                        's5' => 'Centro (Oclusal)'
+                    ];
+
                     foreach ($odontogramJson['teeth'] as $toothId => $state) {
-                        $isMarked = (!empty($state['sections'])) || 
-                                    (isset($state['absent']) && $state['absent']) ||
-                                    (!empty($state['note'])) ||
-                                    (!empty($state['sectionNotes']));
-                        
                         $tooth = $toothRepo->find((int)$toothId);
                         if (!$tooth) {
-                            error_log("DEBUG: Tooth NOT found for ID: " . $toothId);
-                            continue;
+                            $tooth = $toothRepo->findOneBy(['description' => "Tooth $toothId"]);
                         }
+                        if (!$tooth) continue;
 
-                        $detail = $em->getRepository(OdontogramDetail::class)->findOneBy([
-                            'odontogram' => $relationalOdontogram,
-                            'tooth' => $tooth
-                        ]);
-
-                        if ($isMarked) {
-                            error_log("DEBUG: Processing tooth: " . $toothId);
+                        if (isset($state['absent']) && $state['absent']) {
+                            $absentStatus = $statusRepo->findOneBy(['name' => 'Absent']);
+                            $detail = $detailRepo->findOneBy(['odontogram' => $relationalOdontogram, 'tooth' => $tooth, 'face' => 'absent']);
                             if (!$detail) {
                                 $detail = new OdontogramDetail();
                                 $detail->setOdontogram($relationalOdontogram);
                                 $detail->setTooth($tooth);
+                                $detail->setFace('absent');
                                 $em->persist($detail);
                             }
-
-                            // Detectar color para asignar patología
-                            $hexColor = null;
-                            if (isset($state['absent']) && $state['absent']) {
-                                $hexColor = '#000'; // Negro para ausencia
-                            } elseif (!empty($state['sections'])) {
-                                // Tomar el primer color que encontremos
-                                $hexColor = reset($state['sections']);
-                            }
-
-                            if ($hexColor) {
-                                $pathologyId = $this->getPathologyIdByColor($hexColor);
-                                $pathology = $pathologyRepo->find($pathologyId);
-                                if ($pathology) {
-                                    $detail->setPathology($pathology);
-                                }
-                            } elseif (!$detail->getPathology()) {
-                                // Si no tiene patología asignada aún y no hay color, asignar una por defecto (Caries)
-                                $pathology = $pathologyRepo->find(3); 
-                                if ($pathology) {
-                                    $detail->setPathology($pathology);
-                                }
-                            }
-
-                            // Sincronizar notas y cara
-                            $combinedNotes = [];
-                            $caras = [];
+                            $detail->setStatus($absentStatus);
+                            $detail->setPathology(null);
+                            $detail->setTreatment(null);
+                            $detail->setNotes($state['note'] ?? null);
                             
-                            $sectionMapping = [
-                                's1' => 'Superior (Vestibular)',
-                                's2' => 'Derecha',
-                                's3' => 'Inferior (Palatino/Lingual)',
-                                's4' => 'Izquierda',
-                                's5' => 'Centro (Oclusal)',
-                                'absent' => 'Ausencia'
-                            ];
-
-                            // Revisar si hay nota general por diente
-                            if (isset($state['note']) && !empty($state['note'])) {
-                                $note = $state['note'];
-                                
-                                // Buscar si la cara está en la nota (formato: "cara: Oclusal | ...")
-                                if (preg_match('/Sec\s+(?:cara|face)\s*:\s*([^|]+)/i', $note, $matches)) {
-                                    $caras[] = trim($matches[1]);
-                                    // Remover la cara de la nota
-                                    $note = preg_replace('/\s*\|\s*Sec\s+(?:cara|face)\s*:\s*[^|]+/i', '', $note);
-                                    $note = preg_replace('/^Sec\s+(?:cara|face)\s*:\s*[^|]+\s*\|\s*/i', '', $note);
-                                    if (!empty($note)) {
-                                        $combinedNotes[] = $note;
-                                    }
-                                } else {
-                                    $combinedNotes[] = $note;
-                                }
+                            foreach (['s1','s2','s3','s4','s5'] as $s) {
+                                $d = $detailRepo->findOneBy(['odontogram' => $relationalOdontogram, 'tooth' => $tooth, 'face' => $s]);
+                                if ($d) $em->remove($d);
                             }
-                            
-                            // 1. Recoger caras de las secciones marcadas (tengan nota o no)
-                            if (isset($state['sections']) && is_array($state['sections'])) {
-                                foreach ($state['sections'] as $section => $color) {
-                                    $caras[] = $sectionMapping[$section] ?? $section;
-                                }
-                            }
-
-                            // 2. Recoger notas de las secciones y añadir caras adicionales si existen
-                            if (isset($state['sectionNotes']) && is_array($state['sectionNotes'])) {
-                                foreach ($state['sectionNotes'] as $section => $secNote) {
-                                    if (!empty($secNote)) {
-                                        if (strtolower($section) === 'cara' || strtolower($section) === 'face') {
-                                            $caras[] = $secNote;
-                                        } else {
-                                            // Si no estaba ya en caras, añadirla
-                                            $faceName = $sectionMapping[$section] ?? $section;
-                                            if (!in_array($faceName, $caras)) {
-                                                $caras[] = $faceName;
-                                            }
-                                            $combinedNotes[] = $secNote;
-                                        }
-                                    }
-                                }
-                            }
-
-                            // Si es ausencia, añadir a caras
-                            if (isset($state['absent']) && $state['absent']) {
-                                if (!in_array('Ausencia', $caras)) {
-                                    $caras[] = 'Ausencia';
-                                }
-                            }
-
-                            // Quitar duplicados en caras
-                            $caras = array_unique($caras);
-
-                            if (!empty($combinedNotes)) {
-                                $detail->setNotes(implode(' | ', $combinedNotes));
-                            } else {
-                                $detail->setNotes(null);
-                            }
-                            
-                            // Guardar cara en el campo face
-                            if (!empty($caras)) {
-                                $detail->setFace(implode(', ', $caras));
-                            } else {
-                                $detail->setFace(null);
-                            }
+                            continue;
                         } else {
-                            if ($detail) {
-                                $em->remove($detail);
+                            $absentDetail = $detailRepo->findOneBy(['odontogram' => $relationalOdontogram, 'tooth' => $tooth, 'face' => 'absent']);
+                            if ($absentDetail) $em->remove($absentDetail);
+                        }
+
+                        foreach ($sectionMapping as $secKey => $secName) {
+                            $hasSectionData = isset($state['sections'][$secKey]) || 
+                                              isset($state['pathologyTypes'][$secKey]) || 
+                                              isset($state['treatmentTypes'][$secKey]) ||
+                                              isset($state['sectionNotes'][$secKey]);
+
+                            $detail = $detailRepo->findOneBy([
+                                'odontogram' => $relationalOdontogram,
+                                'tooth' => $tooth,
+                                'face' => $secKey
+                            ]);
+
+                            if ($hasSectionData) {
+                                if (!$detail) {
+                                    $detail = new OdontogramDetail();
+                                    $detail->setOdontogram($relationalOdontogram);
+                                    $detail->setTooth($tooth);
+                                    $detail->setFace($secKey);
+                                    $em->persist($detail);
+                                }
+
+                                if (isset($state['pathologyTypes'][$secKey])) {
+                                    $pKey = $state['pathologyTypes'][$secKey];
+                                    $pathology = $pathologyRepo->findOneBy(['description' => ucfirst($pKey)]);
+                                    if ($pathology) $detail->setPathology($pathology);
+                                }
+
+                                if (isset($state['treatmentTypes'][$secKey])) {
+                                    $tKey = $state['treatmentTypes'][$secKey];
+                                    $treatment = $treatmentRepo->findOneBy(['treatmentName' => ucfirst($tKey)]);
+                                    if ($treatment) $detail->setTreatment($treatment);
+                                }
+
+                                if (isset($state['sectionNotes'][$secKey])) {
+                                    $detail->setNotes($state['sectionNotes'][$secKey]);
+                                }
+
+                                if (!$detail->getStatus()) {
+                                    $pendingStatus = $statusRepo->findOneBy(['name' => 'Pending']);
+                                    if ($pendingStatus) $detail->setStatus($pendingStatus);
+                                }
+                            } else {
+                                if ($detail) $em->remove($detail);
                             }
                         }
                     }
@@ -276,20 +221,17 @@ class PatientController extends AbstractController
     {
         $color = strtolower(trim($color));
         $map = [
-            '#ff4d4d' => 1, // Rojo -> Pendiente
-            '#4d79ff' => 2, // Azul -> Realizado
-            '#4dff88' => 3, // Verde -> Caries
-            '#ffff4d' => 4, // Amarillo -> Sellado
-            '#000'    => 5, // Negro -> Ausencia
+            '#ff4d4d' => 1,
+            '#4d79ff' => 2, 
+            '#4dff88' => 3, 
+            '#ffff4d' => 4,
+            '#000'    => 5, 
             '#000000' => 5,
         ];
 
-        return $map[$color] ?? 3; // Por defecto Caries si no coincide
+        return $map[$color] ?? 3;
     }
 
-    // ===========
-    // ELIMINAR
-    // ===========
 
     #[Route('/{id}', methods: ['DELETE'])]
     public function delete(Patient $patient, EntityManagerInterface $em): JsonResponse

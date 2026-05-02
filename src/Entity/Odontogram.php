@@ -35,8 +35,8 @@ class Odontogram
     /**
      * @var Collection<int, OdontogramDetail>
      */
-    #[ORM\OneToMany(targetEntity: OdontogramDetail::class, mappedBy: 'odontogram', cascade: ['remove'])]
-    #[Groups(['odontogram:read'])]
+    #[ORM\OneToMany(targetEntity: OdontogramDetail::class, mappedBy: 'odontogram')]
+    #[Groups(['odontogram:read', 'patient:read'])]
     private Collection $odontogramDetails;
 
     public function __construct()
@@ -106,12 +106,99 @@ class Odontogram
     public function removeOdontogramDetail(OdontogramDetail $odontogramDetail): static
     {
         if ($this->odontogramDetails->removeElement($odontogramDetail)) {
-            // set the owning side to null (unless already changed)
             if ($odontogramDetail->getOdontogram() === $this) {
                 $odontogramDetail->setOdontogram(null);
             }
         }
 
         return $this;
+    }
+
+    #[Groups(['odontogram:read', 'patient:read'])]
+    public function getTeeth(): array
+    {
+        $teeth = [];
+
+        foreach ($this->odontogramDetails as $detail) {
+            $tooth = $detail->getTooth();
+            $toothNum = $tooth->getId();
+            
+            if (preg_match('/Tooth (\d+)/', $tooth->getDescription(), $matches)) {
+                $toothNum = (int)$matches[1];
+            }
+
+            if (!isset($teeth[$toothNum])) {
+                $teeth[$toothNum] = [
+                    'sections' => [],
+                    'sectionNotes' => [],
+                    'pathologyTypes' => [],
+                    'treatmentTypes' => [],
+                    'absent' => false,
+                    'note' => '',
+                ];
+            }
+
+            $face = $detail->getFace();
+            $notes = $detail->getNotes();
+
+            $faceMapping = [
+                'Superior (Vestibular)'      => 's1',
+                'Derecha'                    => 's2',
+                'Dret'                       => 's2',
+                'Inferior (Palatino/Lingual)' => 's3',
+                'Izquierda'                  => 's4',
+                'Esquerre'                   => 's4',
+                'Centro (Oclusal)'           => 's5',
+                'Centre (Oclusal)'           => 's5',
+            ];
+
+            if ($face === 'Ausencia' || $face === 'absent') {
+                $teeth[$toothNum]['absent'] = true;
+                continue;
+            }
+            $section = null;
+            if (isset($faceMapping[$face])) {
+                $section = $faceMapping[$face];
+            } elseif (preg_match('/^s[1-5]$/', $face)) {
+                $section = $face;
+            }
+
+            if ($section) {
+                $color = $detail->getTreatment() ? '#4d79ff' : '#ff4d4d';
+                $teeth[$toothNum]['sections'][$section] = $color;
+
+                if ($detail->getPathology()) {
+                    $teeth[$toothNum]['pathologyTypes'][$section] =
+                        strtolower(str_replace(' ', '', $detail->getPathology()->getDescription()));
+                }
+
+                if ($detail->getTreatment()) {
+                    $teeth[$toothNum]['treatmentTypes'][$section] =
+                        strtolower(str_replace(' ', '', $detail->getTreatment()->getTreatmentName()));
+                }
+
+                if ($notes) {
+                    $teeth[$toothNum]['sectionNotes'][$section] = $notes;
+                }
+            }
+
+            if ($notes && empty($teeth[$toothNum]['note'])) {
+                $teeth[$toothNum]['note'] = $notes;
+            }
+        }
+
+        return $teeth;
+    }
+
+    #[Groups(['odontogram:read', 'patient:read'])]
+    public function getNotes(): string
+    {
+        $allNotes = [];
+        foreach ($this->odontogramDetails as $detail) {
+            if ($detail->getNotes()) {
+                $allNotes[] = $detail->getNotes();
+            }
+        }
+        return implode(' | ', array_unique($allNotes));
     }
 }
