@@ -8,6 +8,7 @@ use App\Entity\Dentist;
 use App\Entity\Patient;
 use App\Entity\Treatment;
 use App\Entity\Pathology;
+use App\Entity\Status;
 use App\Entity\Tooth;
 use App\Entity\Odontogram;
 use App\Entity\OdontogramDetail;
@@ -39,17 +40,21 @@ class PopulateDataCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
+        $io->title('Cleaning up duplicates and populating database...');
 
-        $io->title('Populating database with sample data...');
+        $this->cleanupDuplicates($io);
 
         // 1. Boxes
         $boxes = [];
         for ($i = 1; $i <= 5; $i++) {
-            $box = new Box();
-            $box->setName("Box $i");
-            $box->setCapacity(1);
-            $box->setStatus('Available');
-            $this->entityManager->persist($box);
+            $name = "Box $i";
+            $box = $this->entityManager->getRepository(Box::class)->findOneBy(['name' => $name]);
+            if (!$box) {
+                $box = new Box();
+                $box->setName($name);
+                $box->setCapacity(1);
+                $this->entityManager->persist($box);
+            }
             $boxes[] = $box;
         }
 
@@ -63,10 +68,13 @@ class PopulateDataCommand extends Command
         ];
         $treatments = [];
         foreach ($treatmentsData as $data) {
-            $treatment = new Treatment();
-            $treatment->setTreatmentName($data[0]);
-            $treatment->setDescription($data[1]);
-            $this->entityManager->persist($treatment);
+            $treatment = $this->entityManager->getRepository(Treatment::class)->findOneBy(['treatmentName' => $data[0]]);
+            if (!$treatment) {
+                $treatment = new Treatment();
+                $treatment->setTreatmentName($data[0]);
+                $treatment->setDescription($data[1]);
+                $this->entityManager->persist($treatment);
+            }
             $treatments[] = $treatment;
         }
 
@@ -74,24 +82,41 @@ class PopulateDataCommand extends Command
         $pathologiesData = ['Caries', 'Gingivitis', 'Periodontitis', 'Pulpitis', 'Fracture'];
         $pathologies = [];
         foreach ($pathologiesData as $desc) {
-            $pathology = new Pathology();
-            $pathology->setDescription($desc);
-            $this->entityManager->persist($pathology);
+            $pathology = $this->entityManager->getRepository(Pathology::class)->findOneBy(['description' => $desc]);
+            if (!$pathology) {
+                $pathology = new Pathology();
+                $pathology->setDescription($desc);
+                $this->entityManager->persist($pathology);
+            }
             $pathologies[] = $pathology;
         }
 
-        // 4. Teeth
+        // 4. Statuses (Restricted to Done, Pending, Absent)
+        $statusesData = ['Done', 'Pending', 'Absent'];
+        foreach ($statusesData as $desc) {
+            $status = $this->entityManager->getRepository(Status::class)->findOneBy(['name' => $desc]);
+            if (!$status) {
+                $status = new Status();
+                $status->setName($desc);
+                $this->entityManager->persist($status);
+            }
+        }
+
+        // 5. Teeth
         $teeth = [];
         for ($i = 11; $i <= 48; $i++) {
-            // Simple validation for tooth numbers (FDI system skips some)
             if ($i % 10 > 8 || $i % 10 == 0) continue; 
-            $tooth = new Tooth();
-            $tooth->setDescription("Tooth $i");
-            $this->entityManager->persist($tooth);
+            $desc = "Tooth $i";
+            $tooth = $this->entityManager->getRepository(Tooth::class)->findOneBy(['description' => $desc]);
+            if (!$tooth) {
+                $tooth = new Tooth();
+                $tooth->setDescription($desc);
+                $this->entityManager->persist($tooth);
+            }
             $teeth[] = $tooth;
         }
 
-        // 5. Dentists
+        // 6. Dentists (User Data)
         $dentistsData = [
             ['Juan', 'Pérez', 'General Dentistry', 'Mon-Fri', '555-0101', 'juan.perez@example.com', 'password123'],
             ['María', 'García', 'Orthodontics', 'Tue-Thu', '555-0102', 'maria.garcia@example.com', 'password123'],
@@ -99,19 +124,22 @@ class PopulateDataCommand extends Command
         ];
         $dentists = [];
         foreach ($dentistsData as $data) {
-            $dentist = new Dentist();
-            $dentist->setFirstName($data[0]);
-            $dentist->setLastName($data[1]);
-            $dentist->setSpecialty($data[2]);
-            $dentist->setAvailableDays($data[3]);
-            $dentist->setPhone($data[4]);
-            $dentist->setEmail($data[5]);
-            $dentist->setPassword($data[6]); // Texto plano
-            $this->entityManager->persist($dentist);
+            $dentist = $this->entityManager->getRepository(Dentist::class)->findOneBy(['email' => $data[5]]);
+            if (!$dentist) {
+                $dentist = new Dentist();
+                $dentist->setFirstName($data[0]);
+                $dentist->setLastName($data[1]);
+                $dentist->setSpecialty($data[2]);
+                $dentist->setAvailableDays($data[3]);
+                $dentist->setPhone($data[4]);
+                $dentist->setEmail($data[5]);
+                $dentist->setPassword($this->passwordHasher->hashPassword($dentist, $data[6]));
+                $this->entityManager->persist($dentist);
+            }
             $dentists[] = $dentist;
         }
 
-        // 6. Patients
+        // 7. Patients (User Data)
         $patientsData = [
             ['Laura', 'Sánchez', 12345678, 'SS123', '600000001', 'laura@example.com', 8, 'Calle A, 1', 'Bill 1', 'password123'],
             ['Pedro', 'López', 87654321, 'SS456', '600000002', 'pedro@example.com', 12, 'Calle B, 2', 'Bill 2', 'password123'],
@@ -119,70 +147,55 @@ class PopulateDataCommand extends Command
         ];
         $patients = [];
         foreach ($patientsData as $data) {
-            $patient = new Patient();
-            $patient->setFirstName($data[0]);
-            $patient->setLastName($data[1]);
-            $patient->setNationalId($data[2]);
-            $patient->setSocialSecurityNumber($data[3]);
-            $patient->setPhone($data[4]);
-            $patient->setEmail($data[5]);
-            $patient->setAge($data[6]);
-            $patient->setAddress($data[7]);
-            $patient->setBillingData($data[8]);
-            $patient->setHealthStatus('Good');
-            $patient->setFamilyHistory('None');
-            $patient->setLifestyleHabits('Healthy');
-            $patient->setMedicationAllergies('None');
-            $patient->setRegistrationDate(new \DateTime());
-            
-            // Asignar contraseña en texto plano
-            $patient->setPassword($data[9]);
-            
-            $this->entityManager->persist($patient);
+            $patient = $this->entityManager->getRepository(Patient::class)->findOneBy(['email' => $data[5]]);
+            if (!$patient) {
+                $patient = new Patient();
+                $patient->setFirstName($data[0]);
+                $patient->setLastName($data[1]);
+                $patient->setNationalId($data[2]);
+                $patient->setSocialSecurityNumber($data[3]);
+                $patient->setPhone($data[4]);
+                $patient->setEmail($data[5]);
+                $patient->setAge($data[6]);
+                $patient->setAddress($data[7]);
+                $patient->setBillingData($data[8]);
+                $patient->setRegistrationDate(new \DateTime());
+                $patient->setHealthStatus('Good');
+                $patient->setFamilyHistory('None');
+                $patient->setLifestyleHabits('None');
+                $patient->setMedicationAllergies('None');
+                $this->entityManager->persist($patient);
+            }
             $patients[] = $patient;
         }
 
         $this->entityManager->flush();
-
-        // 7. Appointments & Related
-        foreach ($patients as $index => $patient) {
-            $appointment = new Appointment();
-            $appointment->setPatient($patient);
-            $appointment->setDentist($dentists[$index % count($dentists)]);
-            $appointment->setBox($boxes[$index % count($boxes)]);
-            $appointment->setTreatment($treatments[$index % count($treatments)]);
-            $appointment->setVisitDate(new \DateTime("+".($index+1)." days"));
-            $appointment->setConsultationReason('Routine checkup');
-            $this->entityManager->persist($appointment);
-
-            // Odontogram
-            $odontogram = new Odontogram();
-            $odontogram->setPatient($patient);
-            $odontogram->setAppointment($appointment);
-            $odontogram->setCreationDate(new \DateTime());
-            $this->entityManager->persist($odontogram);
-
-            // Odontogram Detail
-            $detail = new OdontogramDetail();
-            $detail->setOdontogram($odontogram);
-            $detail->setTooth($teeth[array_rand($teeth)]);
-            $detail->setPathology($pathologies[array_rand($pathologies)]);
-            $detail->setNotes('Minor issue found');
-            $this->entityManager->persist($detail);
-
-            // Document
-            $document = new Document();
-            $document->setPatient($patient);
-            $document->setType('X-Ray');
-            $document->setFileUrl("https://example.com/docs/patient_$index.pdf");
-            $document->setCaptureDate(new \DateTime());
-            $this->entityManager->persist($document);
-        }
-
-        $this->entityManager->flush();
-
-        $io->success('Database populated successfully!');
+        $io->success('Database cleaned and populated successfully!');
 
         return Command::SUCCESS;
+    }
+
+    private function cleanupDuplicates(SymfonyStyle $io): void
+    {
+        $io->section('Removing duplicate and obsolete entries safely...');
+        $connection = $this->entityManager->getConnection();
+
+        $connection->executeStatement('SET FOREIGN_KEY_CHECKS = 0');
+
+        // Cleanup Dentist and Patient duplicates
+        $connection->executeStatement('DELETE d1 FROM dentist d1 INNER JOIN dentist d2 WHERE d1.id > d2.id AND d1.email = d2.email');
+        $connection->executeStatement('DELETE p1 FROM patient p1 INNER JOIN patient p2 WHERE p1.id > p2.id AND p1.email = p2.email');
+        
+        // Cleanup Pathologies and Treatments duplicates
+        $connection->executeStatement('DELETE p1 FROM pathology p1 INNER JOIN pathology p2 WHERE p1.id > p2.id AND p1.description = p2.description');
+        $connection->executeStatement('DELETE t1 FROM treatment t1 INNER JOIN treatment t2 WHERE t1.id > t2.id AND t1.treatment_name = t2.treatment_name');
+        
+        // Cleanup Status duplicates and obsolete
+        $connection->executeStatement('DELETE s1 FROM status s1 INNER JOIN status s2 WHERE s1.id > s2.id AND s1.name = s2.name');
+        $connection->executeStatement("DELETE FROM status WHERE name NOT IN ('Done', 'Pending', 'Absent')");
+
+        $connection->executeStatement('SET FOREIGN_KEY_CHECKS = 1');
+
+        $io->text('Cleanup complete.');
     }
 }

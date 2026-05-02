@@ -300,7 +300,6 @@ class Patient implements UserInterface, PasswordAuthenticatedUserInterface
     public function removeAppointment(Appointment $appointment): static
     {
         if ($this->appointments->removeElement($appointment)) {
-            // set the owning side to null (unless already changed)
             if ($appointment->getPatient() === $this) {
                 $appointment->setPatient(null);
             }
@@ -330,7 +329,6 @@ class Patient implements UserInterface, PasswordAuthenticatedUserInterface
     public function removeOdontogram(Odontogram $odontogram): static
     {
         if ($this->odontograms->removeElement($odontogram)) {
-            // set the owning side to null (unless already changed)
             if ($odontogram->getPatient() === $this) {
                 $odontogram->setPatient(null);
             }
@@ -360,7 +358,6 @@ class Patient implements UserInterface, PasswordAuthenticatedUserInterface
     public function removeDocument(Document $document): static
     {
         if ($this->documents->removeElement($document)) {
-            // set the owning side to null (unless already changed)
             if ($document->getPatient() === $this) {
                 $document->setPatient(null);
             }
@@ -401,4 +398,9 @@ class Patient implements UserInterface, PasswordAuthenticatedUserInterface
         return null;
     }
 
+    #[Groups(['patient:read'])]
+    public function getOdontogram(): ?Odontogram
+    {
+        return $this->odontograms->last() ?: ($this->odontograms->first() ?: null);
+    }
 }

@@ -13,35 +13,40 @@ class OdontogramDetail
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['odontogram:read'])]
+    #[Groups(['odontogram:read', 'patient:read'])]
     private ?int $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'odontogramDetails')]
     #[ORM\JoinColumn(nullable: false)]
-    #[Groups(['odontogram:read'])]
+    #[Groups(['odontogram:read', 'patient:read'])]
     private ?Odontogram $odontogram = null;
 
     #[ORM\ManyToOne(inversedBy: 'odontogramDetails')]
     #[ORM\JoinColumn(nullable: false)]
-    #[Groups(['odontogram:read'])]
+    #[Groups(['odontogram:read', 'patient:read'])]
     private ?Tooth $tooth = null;
 
     #[ORM\ManyToOne(inversedBy: 'odontogramDetails')]
     #[ORM\JoinColumn(nullable: true)]
-    #[Groups(['odontogram:read'])]
+    #[Groups(['odontogram:read', 'patient:read'])]
     private ?Pathology $pathology = null;
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: true)]
-    #[Groups(['odontogram:read'])]
+    #[Groups(['odontogram:read', 'patient:read'])]
     private ?Treatment $treatment = null;
 
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(nullable: true)]
+    #[Groups(['odontogram:read', 'patient:read'])]
+    private ?Status $status = null;
+
     #[ORM\Column(type: Types::TEXT, nullable: true)]
-    #[Groups(['odontogram:read'])]
+    #[Groups(['odontogram:read', 'patient:read'])]
     private ?string $notes = null;
 
     #[ORM\Column(length: 50, nullable: true)]
-    #[Groups(['odontogram:read'])]
+    #[Groups(['odontogram:read', 'patient:read'])]
     private ?string $face = null;
 
     public function getId(): ?int
@@ -94,6 +99,17 @@ class OdontogramDetail
     {
         $this->treatment = $treatment;
 
+        return $this;
+    }
+
+    public function getStatus(): ?Status
+    {
+        return $this->status;
+    }
+
+    public function setStatus(?Status $status): static
+    {
+        $this->status = $status;
         return $this;
     }
 
