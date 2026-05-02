@@ -20,22 +20,22 @@ class Treatment
     private ?int $id = null;
 
     #[ORM\Column(length: 150)]
-    #[Groups(['treatment:read', 'appointment:read'])]
+    #[Groups(['treatment:read', 'appointment:read', 'odontogram:read', 'patient:read'])]
     private ?string $treatmentName = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
-    #[Groups(['treatment:read', 'appointment:read'])]
+    #[Groups(['treatment:read', 'appointment:read', 'odontogram:read', 'patient:read'])]
     private ?string $description = null;
 
-    #[ORM\Column(length: 100)]
+    #[ORM\Column(length: 100, nullable: true)]
     #[Groups(['treatment:read', 'appointment:read'])]
     private ?string $category = null;
 
-    #[ORM\Column(type: Types::INTEGER)]
+    #[ORM\Column(type: Types::INTEGER, nullable: true)]
     #[Groups(['treatment:read', 'appointment:read'])]
     private ?int $duration = null;
 
-    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2)]
+    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2, nullable: true)]
     #[Groups(['treatment:read', 'appointment:read'])]
     private ?string $price = null;
 
@@ -61,7 +61,7 @@ class Treatment
     }
 
     #[SerializedName('name')]
-    #[Groups(['treatment:read', 'appointment:read'])]
+    #[Groups(['treatment:read', 'appointment:read', 'odontogram:read', 'patient:read'])]
     public function getName(): ?string
     {
         return $this->treatmentName;

@@ -138,7 +138,7 @@ class Odontogram
                 ];
             }
 
-            $face = $detail->getFace();
+            $face = $detail->getCara();
             $notes = $detail->getNotes();
 
             $faceMapping = [
