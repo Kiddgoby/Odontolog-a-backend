@@ -79,7 +79,7 @@ class OdontogramDetailController extends AbstractController
         return $this->json(null, 204);
     }
 
-    #[Route('/pathologies', methods: ['GET'])]
+    #[Route('/api/pathologies', methods: ['GET'])]
     public function getPathologies(EntityManagerInterface $em): JsonResponse
     {
         $pathologies = $em->getRepository(Pathology::class)->findAll();
@@ -95,7 +95,7 @@ class OdontogramDetailController extends AbstractController
         return $this->json($data);
     }
 
-    #[Route('/treatments', methods: ['GET'])]
+    #[Route('/api/treatments', methods: ['GET'])]
     public function getTreatments(EntityManagerInterface $em): JsonResponse
     {
         $treatments = $em->getRepository(Treatment::class)->findAll();
@@ -111,7 +111,7 @@ class OdontogramDetailController extends AbstractController
         return $this->json($data);
     }
 
-    #[Route('/statuses', methods: ['GET'])]
+    #[Route('/api/statuses', methods: ['GET'])]
     public function getStatuses(EntityManagerInterface $em): JsonResponse
     {
         $statuses = $em->getRepository(Status::class)->findAll();
