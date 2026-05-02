@@ -37,13 +37,15 @@ class OdontogramDetailController extends AbstractController
         error_log("DEBUG: OdontogramDetail creation request received: " . json_encode($data));
 
         $detail = new OdontogramDetail();
+        
+        if (!isset($data['odontogramId'])) {
+            return $this->json(['error' => 'No se ha proporcionado un ID de odontograma (odontogramId)'], 400);
+        }
+
         $this->mapDataToDetail($detail, $data, $em);
 
         if (!$detail->getOdontogram()) {
-            error_log("DEBUG: Error - Odontogram not found for ID: " . ($data['odontogramId'] ?? 'NULL'));
-        }
-        if (!$detail->getTooth()) {
-            error_log("DEBUG: Error - Tooth not found for ID/Number: " . ($data['toothId'] ?? 'NULL'));
+            return $this->json(['error' => 'El odontograma con ID ' . $data['odontogramId'] . ' no existe en la base de datos'], 404);
         }
 
         $em->persist($detail);
@@ -173,7 +175,7 @@ class OdontogramDetailController extends AbstractController
                 'treatmentId' => $detail->getTreatment() ? $detail->getTreatment()->getId() : null,
                 'statusId' => $detail->getStatus() ? $detail->getStatus()->getId() : null,
                 'notes' => $detail->getNotes(),
-                'face' => $detail->getFace()
+                'cara' => $detail->getCara()
             ]
         ]);
     }
@@ -202,9 +204,33 @@ class OdontogramDetailController extends AbstractController
         return $this->json([
             'success' => true,
             'notes' => $detail->getNotes(),
-            'face' => $detail->getFace(),
+            'cara' => $detail->getCara(),
             'detailId' => $detail->getId()
         ]);
+    }
+
+    private function getColorForTreatment(string $name): string
+    {
+        return match (strtolower($name)) {
+            'limpieza' => '#26A69A',
+            'obsturacion' => '#1E88E5',
+            'endodoncia' => '#8E24AA',
+            'extraccion' => '#D32F2F',
+            'blanqueamiento' => '#FDD835',
+            default => '#9E9E9E',
+        };
+    }
+
+    private function getColorForPathology(string $name): string
+    {
+        return match (strtolower($name)) {
+            'caries' => '#E53935',
+            'gingivitis' => '#FB8C00',
+            'periodontitis' => '#8E24AA',
+            'fractura' => '#5D4037',
+            'ausencia' => '#212121',
+            default => '#BDBDBD',
+        };
     }
 
     #[Route('/update-cara', methods: ['POST'])]
@@ -224,7 +250,7 @@ class OdontogramDetailController extends AbstractController
         $detail = $em->getRepository(OdontogramDetail::class)->findOneBy([
             'odontogram' => $data['odontogramId'],
             'tooth' => $tooth,
-            'face' => $data['cara']
+            'cara' => $data['cara']
         ]);
 
         if (!$detail) {
@@ -236,12 +262,11 @@ class OdontogramDetailController extends AbstractController
             }
             $detail->setOdontogram($odontogram);
             $detail->setTooth($tooth);
-            $detail->setFace($data['cara']);
-
+            $detail->setCara($data['cara']);
             $em->persist($detail);
         }
 
-        $detail->setFace($data['cara']);
+        $detail->setCara($data['cara']);
         $em->flush();
 
         return $this->json([
@@ -251,7 +276,7 @@ class OdontogramDetailController extends AbstractController
                 'id' => $detail->getId(),
                 'odontogramId' => $detail->getOdontogram()->getId(),
                 'toothId' => $detail->getTooth()->getId(),
-                'face' => $detail->getFace()
+                'cara' => $detail->getCara()
             ]
         ]);
     }
@@ -308,8 +333,10 @@ class OdontogramDetailController extends AbstractController
             $detail->setNotes($data['notes']);
         }
 
-        if (isset($data['cara']) || isset($data['face'])) {
-            $detail->setFace($data['cara'] ?? $data['face']);
+        if (isset($data['cara'])) {
+            $detail->setCara($data['cara']);
+        } elseif (isset($data['face'])) {
+            $detail->setCara($data['face']);
         }
     }
 }

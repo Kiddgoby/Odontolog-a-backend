@@ -129,12 +129,12 @@ class PatientController extends AbstractController
 
                         if (isset($state['absent']) && $state['absent']) {
                             $absentStatus = $statusRepo->findOneBy(['name' => 'Absent']);
-                            $detail = $detailRepo->findOneBy(['odontogram' => $relationalOdontogram, 'tooth' => $tooth, 'face' => 'absent']);
+                            $detail = $detailRepo->findOneBy(['odontogram' => $relationalOdontogram, 'tooth' => $tooth, 'cara' => 'absent']);
                             if (!$detail) {
                                 $detail = new OdontogramDetail();
                                 $detail->setOdontogram($relationalOdontogram);
                                 $detail->setTooth($tooth);
-                                $detail->setFace('absent');
+                                $detail->setCara('absent');
                                 $em->persist($detail);
                             }
                             $detail->setStatus($absentStatus);
@@ -143,12 +143,12 @@ class PatientController extends AbstractController
                             $detail->setNotes($state['note'] ?? null);
                             
                             foreach (['s1','s2','s3','s4','s5'] as $s) {
-                                $d = $detailRepo->findOneBy(['odontogram' => $relationalOdontogram, 'tooth' => $tooth, 'face' => $s]);
+                                $d = $detailRepo->findOneBy(['odontogram' => $relationalOdontogram, 'tooth' => $tooth, 'cara' => $s]);
                                 if ($d) $em->remove($d);
                             }
                             continue;
                         } else {
-                            $absentDetail = $detailRepo->findOneBy(['odontogram' => $relationalOdontogram, 'tooth' => $tooth, 'face' => 'absent']);
+                            $absentDetail = $detailRepo->findOneBy(['odontogram' => $relationalOdontogram, 'tooth' => $tooth, 'cara' => 'absent']);
                             if ($absentDetail) $em->remove($absentDetail);
                         }
 
@@ -161,7 +161,7 @@ class PatientController extends AbstractController
                             $detail = $detailRepo->findOneBy([
                                 'odontogram' => $relationalOdontogram,
                                 'tooth' => $tooth,
-                                'face' => $secKey
+                                'cara' => $secKey
                             ]);
 
                             if ($hasSectionData) {
@@ -169,7 +169,7 @@ class PatientController extends AbstractController
                                     $detail = new OdontogramDetail();
                                     $detail->setOdontogram($relationalOdontogram);
                                     $detail->setTooth($tooth);
-                                    $detail->setFace($secKey);
+                                    $detail->setCara($secKey);
                                     $em->persist($detail);
                                 }
 

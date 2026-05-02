@@ -18,7 +18,7 @@ class OdontogramDetail
 
     #[ORM\ManyToOne(inversedBy: 'odontogramDetails')]
     #[ORM\JoinColumn(nullable: false)]
-    #[Groups(['odontogram:read', 'patient:read'])]
+    #[Groups(['patient:read'])]
     private ?Odontogram $odontogram = null;
 
     #[ORM\ManyToOne(inversedBy: 'odontogramDetails')]
@@ -47,7 +47,7 @@ class OdontogramDetail
 
     #[ORM\Column(length: 50, nullable: true)]
     #[Groups(['odontogram:read', 'patient:read'])]
-    private ?string $face = null;
+    private ?string $cara = null;
 
     public function getId(): ?int
     {

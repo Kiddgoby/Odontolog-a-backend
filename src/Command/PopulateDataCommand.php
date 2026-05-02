@@ -44,6 +44,22 @@ class PopulateDataCommand extends Command
 
         $this->cleanupDuplicates($io);
 
+        $treatmentsData = [
+            ['Limpieza', 'Limpieza dental profunda'],
+            ['Obsturacion', 'Obturación dental (empaste)'],
+            ['Endodoncia', 'Tratamiento de conducto'],
+            ['Extraccion', 'Extracción dental'],
+            ['Blanqueamiento', 'Blanqueamiento dental profesional'],
+        ];
+
+        $pathologiesData = [
+            'Caries',
+            'Gingivitis',
+            'Periodontitis',
+            'Fractura',
+            'Ausencia',
+        ];
+
         $boxes = [];
         for ($i = 1; $i <= 5; $i++) {
             $name = "Box $i";
