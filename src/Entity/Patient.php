@@ -27,9 +27,9 @@ class Patient implements UserInterface, PasswordAuthenticatedUserInterface
     #[Groups(['patient:read', 'appointment:read'])]
     private ?string $lastName = null;
 
-    #[ORM\Column]
+    #[ORM\Column(length: 20)]
     #[Groups(['patient:read'])]
-    private ?int $nationalId = null;
+    private ?string $nationalId = null;
 
     #[ORM\Column(nullable: true)]
     #[Groups(['patient:read'])]
@@ -81,21 +81,18 @@ class Patient implements UserInterface, PasswordAuthenticatedUserInterface
      * @var Collection<int, Appointment>
      */
     #[ORM\OneToMany(targetEntity: Appointment::class, mappedBy: 'patient', orphanRemoval: true)]
-    #[Groups(['patient:read'])]
     private Collection $appointments;
 
     /**
      * @var Collection<int, Odontogram>
      */
     #[ORM\OneToMany(targetEntity: Odontogram::class, mappedBy: 'patient', orphanRemoval: true)]
-    #[Groups(['patient:read'])]
     private Collection $odontograms;
 
     /**
      * @var Collection<int, Document>
      */
     #[ORM\OneToMany(targetEntity: Document::class, mappedBy: 'patient', orphanRemoval: true)]
-    #[Groups(['patient:read'])]
     private Collection $documents;
 
 
@@ -135,12 +132,12 @@ class Patient implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function getNationalId(): ?int
+    public function getNationalId(): ?string
     {
         return $this->nationalId;
     }
 
-    public function setNationalId(int $nationalId): static
+    public function setNationalId(string $nationalId): static
     {
         $this->nationalId = $nationalId;
 

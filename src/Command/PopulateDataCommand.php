@@ -44,7 +44,6 @@ class PopulateDataCommand extends Command
 
         $this->cleanupDuplicates($io);
 
-        // 1. Boxes
         $boxes = [];
         for ($i = 1; $i <= 5; $i++) {
             $name = "Box $i";
@@ -58,14 +57,6 @@ class PopulateDataCommand extends Command
             $boxes[] = $box;
         }
 
-        // 2. Treatments
-        $treatmentsData = [
-            ['Cleaning', 'Professional dental cleaning'],
-            ['Filling', 'Composite dental filling'],
-            ['Root Canal', 'Endodontic treatment'],
-            ['Extraction', 'Tooth extraction'],
-            ['Whitening', 'Teeth whitening service'],
-        ];
         $treatments = [];
         foreach ($treatmentsData as $data) {
             $treatment = $this->entityManager->getRepository(Treatment::class)->findOneBy(['treatmentName' => $data[0]]);
@@ -78,8 +69,6 @@ class PopulateDataCommand extends Command
             $treatments[] = $treatment;
         }
 
-        // 3. Pathologies
-        $pathologiesData = ['Caries', 'Gingivitis', 'Periodontitis', 'Pulpitis', 'Fracture'];
         $pathologies = [];
         foreach ($pathologiesData as $desc) {
             $pathology = $this->entityManager->getRepository(Pathology::class)->findOneBy(['description' => $desc]);

@@ -125,14 +125,14 @@ class OdontogramDetail
         return $this;
     }
 
-    public function getFace(): ?string
+    public function getCara(): ?string
     {
-        return $this->face;
+        return $this->cara;
     }
 
-    public function setFace(?string $face): static
+    public function setCara(?string $cara): static
     {
-        $this->face = $face;
+        $this->cara = $cara;
 
         return $this;
     }

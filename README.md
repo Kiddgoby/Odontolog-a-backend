@@ -17,25 +17,35 @@ El sistema gestiona las siguientes entidades principales:
 - **Documentos:** Archivos y pruebas médicas.
 - **Tratamientos y Patologías:** Catálogo de servicios médicos.
 
-## � Instalación
+## 🚀 Instalación y Configuración (Guía para Profesores)
 
-1. Instalar dependencias:
+Para que el proyecto funcione correctamente en un entorno local (como XAMPP), siga estos pasos:
+
+1. **Instalar dependencias:**
    ```bash
    composer install
    ```
 
-2. Configurar la base de datos en el archivo `.env`:
-   ```text
-   DATABASE_URL="mysql://root:@127.0.0.1:3306/dentalclinic_database"
-   ```
-
-3. Crear la base de datos y ejecutar migraciones:
+2. **Configurar la conexión:**
+   Asegúrese de que el archivo `.env` tenga la URL correcta. El nombre de la base de datos debe ser `dentalclinic_database`:
    ```bash
-   php bin/console doctrine:database:create
-   php bin/console doctrine:migrations:migrate
+   DATABASE_URL="mysql://root:@127.0.0.1:3306/dentalclinic_database?serverVersion=8.0"
    ```
 
-4. Iniciar servidor:
+3. **Preparar la Base de Datos:**
+   Ejecute estos comandos en orden para crear la estructura y cargar los datos de prueba:
+   ```bash
+   # 1. Crear la base de datos física
+   php bin/console doctrine:database:create
+
+   # 2. Crear las tablas (Ignorando migraciones incrementales)
+   php bin/console doctrine:schema:update --force
+
+   # 3. Cargar los datos de prueba (Pacientes, citas, odontogramas, etc.)
+   php bin/console app:populate-data
+   ```
+
+4. **Iniciar el servicio:**
    ```bash
    symfony serve
    ```
