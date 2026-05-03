@@ -18,7 +18,7 @@ class OdontogramDetail
 
     #[ORM\ManyToOne(inversedBy: 'odontogramDetails')]
     #[ORM\JoinColumn(nullable: false)]
-    #[Groups(['patient:read'])]
+    #[Groups(['odontogram:detail'])]
     private ?Odontogram $odontogram = null;
 
     #[ORM\ManyToOne(inversedBy: 'odontogramDetails')]
