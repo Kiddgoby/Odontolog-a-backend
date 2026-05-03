@@ -36,7 +36,7 @@ class OdontogramDetail
     #[Groups(['odontogram:read', 'patient:read'])]
     private ?Treatment $treatment = null;
 
-    #[ORM\ManyToOne]
+    #[ORM\ManyToOne(inversedBy: 'odontogramDetails')]
     #[ORM\JoinColumn(nullable: true)]
     #[Groups(['odontogram:read', 'patient:read'])]
     private ?Status $status = null;
