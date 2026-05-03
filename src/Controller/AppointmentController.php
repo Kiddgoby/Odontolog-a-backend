@@ -55,6 +55,40 @@ class AppointmentController extends AbstractController
         return $this->json($appointment, 200, [], ['groups' => 'appointment:read']);
     }
 
+    #[Route('/{id}', methods: ['PATCH'])]
+    public function patch(Appointment $appointment, Request $request, EntityManagerInterface $em): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+
+        // Para actualizaciones parciales, solo mapear los campos que vienen
+        if (isset($data['estado'])) {
+            $appointment->setEstado($data['estado']);
+            error_log("DEBUG: Estado actualizado a: " . $data['estado']);
+        }
+        
+        if (isset($data['hora'])) {
+            // El campo 'hora' viene del frontend, necesitamos actualizar visitDate
+            $currentVisitDate = $appointment->getVisitDate();
+            if ($currentVisitDate) {
+                $newVisitDate = new \DateTime($currentVisitDate->format('Y-m-d') . ' ' . $data['hora'] . ':00');
+                $appointment->setVisitDate($newVisitDate);
+                error_log("DEBUG: Hora actualizada a: " . $data['hora']);
+            }
+        }
+        
+        if (isset($data['asistido'])) {
+            $appointment->setAsistido($data['asistido']);
+            error_log("DEBUG: Asistido actualizado a: " . $data['asistido']);
+        }
+
+        // También procesar otros campos con el método existente
+        $this->mapDataToAppointment($appointment, $data, $em);
+
+        $em->flush();
+
+        return $this->json($appointment, 200, [], ['groups' => 'appointment:read']);
+    }
+
     #[Route('/{id}', methods: ['DELETE'])]
     public function delete(Appointment $appointment, EntityManagerInterface $em): JsonResponse
     {
