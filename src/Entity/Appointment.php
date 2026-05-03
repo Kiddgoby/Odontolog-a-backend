@@ -46,6 +46,14 @@ class Appointment
     #[Groups(['appointment:read', 'patient:read'])]
     private ?string $consultationReason = null;
 
+    #[ORM\Column(length: 50)]
+    #[Groups(['appointment:read', 'patient:read'])]
+    private ?string $estado = 'pendiente';
+
+    #[ORM\Column(length: 20)]
+    #[Groups(['appointment:read', 'patient:read'])]
+    private ?string $asistido = 'pendiente';
+
     /**
      * @var Collection<int, Odontogram>
      */
@@ -160,6 +168,30 @@ class Appointment
                 $odontogram->setAppointment(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getEstado(): ?string
+    {
+        return $this->estado;
+    }
+
+    public function setEstado(string $estado): static
+    {
+        $this->estado = $estado;
+
+        return $this;
+    }
+
+    public function getAsistido(): ?string
+    {
+        return $this->asistido;
+    }
+
+    public function setAsistido(string $asistido): static
+    {
+        $this->asistido = $asistido;
 
         return $this;
     }
