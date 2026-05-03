@@ -35,29 +35,56 @@ class OdontogramDetailController extends AbstractController
     {
         $data = json_decode($request->getContent(), true);
         error_log("DEBUG: OdontogramDetail creation request received: " . json_encode($data));
-
-        $detail = new OdontogramDetail();
         
         if (!isset($data['odontogramId'])) {
             return $this->json(['error' => 'No se ha proporcionado un ID de odontograma (odontogramId)'], 400);
         }
 
+        if (!isset($data['toothId'])) {
+            return $this->json(['error' => 'No se ha proporcionado un ID de diente (toothId)'], 400);
+        }
+
+        $tooth = $this->findTooth($data['toothId'], $em);
+        if (!$tooth) {
+            return $this->json(['error' => 'El diente con ID/descripción ' . $data['toothId'] . ' no existe'], 404);
+        }
+
+        $odontogram = $em->getRepository(Odontogram::class)->find($data['odontogramId']);
+        if (!$odontogram) {
+            return $this->json(['error' => 'El odontograma no existe'], 404);
+        }
+
+        $cara = $data['cara'] ?? ($data['face'] ?? null);
+
+        // Buscar si ya existe un detalle para este odontograma, diente y cara
+        $detail = $em->getRepository(OdontogramDetail::class)->findOneBy([
+            'odontogram' => $odontogram,
+            'tooth' => $tooth,
+            'cara' => $cara
+        ]);
+
+        if (!$detail) {
+            $detail = new OdontogramDetail();
+            $detail->setOdontogram($odontogram);
+            $detail->setTooth($tooth);
+            if ($cara) $detail->setCara($cara);
+        }
+
         $this->mapDataToDetail($detail, $data, $em);
 
-        if (!$detail->getOdontogram()) {
-            return $this->json(['error' => 'El odontograma con ID ' . $data['odontogramId'] . ' no existe en la base de datos'], 404);
-        }
+        error_log("DEBUG: Final statusId to save: " . ($detail->getStatus() ? $detail->getStatus()->getId() : 'NULL'));
+        error_log("DEBUG: Final toothId to save: " . ($detail->getTooth() ? $detail->getTooth()->getId() : 'NULL'));
 
         $em->persist($detail);
         try {
             $em->flush();
-            error_log("DEBUG: OdontogramDetail created successfully with ID: " . $detail->getId());
+            error_log("DEBUG: OdontogramDetail created/updated successfully with ID: " . $detail->getId());
         } catch (\Exception $e) {
             error_log("DEBUG: Exception during flush: " . $e->getMessage());
             return $this->json(['error' => 'Database error: ' . $e->getMessage()], 500);
         }
 
-        return $this->json($detail, 201, [], ['groups' => 'odontogram:read']);
+        return $this->json($detail, 201, [], ['groups' => ['odontogram:read', 'patient:read']]);
     }
 
     #[Route('/{id}', methods: ['PUT'])]
@@ -283,10 +310,14 @@ class OdontogramDetailController extends AbstractController
 
     private function findTooth($idOrNumber, EntityManagerInterface $em): ?Tooth
     {
-        $tooth = $em->getRepository(Tooth::class)->find($idOrNumber);
+        $tooth = $em->getRepository(Tooth::class)->findOneBy(['description' => (string)$idOrNumber]);
         
         if (!$tooth) {
-            $tooth = $em->getRepository(Tooth::class)->findOneBy(['description' => (string)$idOrNumber]);
+            $tooth = $em->getRepository(Tooth::class)->find($idOrNumber);
+        }
+        
+        if (!$tooth && is_numeric($idOrNumber)) {
+             $tooth = $em->getRepository(Tooth::class)->findOneBy(['description' => "Tooth " . $idOrNumber]);
         }
         
         return $tooth;
@@ -318,14 +349,19 @@ class OdontogramDetailController extends AbstractController
             $detail->setTreatment($treatment);
         }
 
-        if (array_key_exists('statusId', $data)) {
-            $status = $data['statusId'] ? $em->getRepository(Status::class)->find($data['statusId']) : null;
+        if (array_key_exists('statusId', $data) && $data['statusId']) {
+            $status = $em->getRepository(Status::class)->find($data['statusId']);
             if ($status) {
                 $detail->setStatus($status);
                 if (strtolower($status->getName()) === 'absent') {
                     $detail->setPathology(null);
                     $detail->setTreatment(null);
                 }
+            }
+        } elseif (!$detail->getStatus()) {
+            $pendingStatus = $em->getRepository(Status::class)->findOneBy(['name' => 'Pending']);
+            if ($pendingStatus) {
+                $detail->setStatus($pendingStatus);
             }
         }
 

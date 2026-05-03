@@ -96,8 +96,7 @@ class PopulateDataCommand extends Command
             $pathologies[] = $pathology;
         }
 
-        // 4. Statuses (Restricted to Done, Pending, Absent)
-        $statusesData = ['Done', 'Pending', 'Absent'];
+        $statusesData = ['Done', 'Pending'];
         foreach ($statusesData as $desc) {
             $status = $this->entityManager->getRepository(Status::class)->findOneBy(['name' => $desc]);
             if (!$status) {
@@ -107,21 +106,22 @@ class PopulateDataCommand extends Command
             }
         }
 
-        // 5. Teeth
         $teeth = [];
-        for ($i = 11; $i <= 48; $i++) {
-            if ($i % 10 > 8 || $i % 10 == 0) continue; 
-            $desc = "Tooth $i";
-            $tooth = $this->entityManager->getRepository(Tooth::class)->findOneBy(['description' => $desc]);
-            if (!$tooth) {
-                $tooth = new Tooth();
-                $tooth->setDescription($desc);
-                $this->entityManager->persist($tooth);
+        $teethRanges = [[11, 48], [51, 85]];
+        foreach ($teethRanges as $range) {
+            for ($i = $range[0]; $i <= $range[1]; $i++) {
+                if ($i % 10 > 8 || $i % 10 == 0) continue; 
+                $desc = (string)$i;
+                $tooth = $this->entityManager->getRepository(Tooth::class)->findOneBy(['description' => $desc]);
+                if (!$tooth) {
+                    $tooth = new Tooth();
+                    $tooth->setDescription($desc);
+                    $this->entityManager->persist($tooth);
+                }
+                $teeth[] = $tooth;
             }
-            $teeth[] = $tooth;
         }
 
-        // 6. Dentists (User Data)
         $dentistsData = [
             ['Juan', 'Pérez', 'General Dentistry', 'Mon-Fri', '555-0101', 'juan.perez@example.com', 'password123'],
             ['María', 'García', 'Orthodontics', 'Tue-Thu', '555-0102', 'maria.garcia@example.com', 'password123'],
@@ -144,7 +144,6 @@ class PopulateDataCommand extends Command
             $dentists[] = $dentist;
         }
 
-        // 7. Patients (User Data)
         $patientsData = [
             ['Laura', 'Sánchez', 12345678, 'SS123', '600000001', 'laura@example.com', 8, 'Calle A, 1', 'Bill 1', 'password123'],
             ['Pedro', 'López', 87654321, 'SS456', '600000002', 'pedro@example.com', 12, 'Calle B, 2', 'Bill 2', 'password123'],
@@ -197,7 +196,7 @@ class PopulateDataCommand extends Command
         
         // Cleanup Status duplicates and obsolete
         $connection->executeStatement('DELETE s1 FROM status s1 INNER JOIN status s2 WHERE s1.id > s2.id AND s1.name = s2.name');
-        $connection->executeStatement("DELETE FROM status WHERE name NOT IN ('Done', 'Pending', 'Absent')");
+        $connection->executeStatement("DELETE FROM status WHERE name NOT IN ('Done', 'Pending')");
 
         $connection->executeStatement('SET FOREIGN_KEY_CHECKS = 1');
 
