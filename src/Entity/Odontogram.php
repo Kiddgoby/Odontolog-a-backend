@@ -123,8 +123,11 @@ class Odontogram
             $tooth = $detail->getTooth();
             $toothNum = $tooth->getId();
             
-            if (preg_match('/Tooth (\d+)/', $tooth->getDescription(), $matches)) {
+            $desc = $tooth->getDescription();
+            if (preg_match('/(?:Tooth )?(\d+)/', $desc, $matches)) {
                 $toothNum = (int)$matches[1];
+            } else {
+                $toothNum = $tooth->getId();
             }
 
             if (!isset($teeth[$toothNum])) {
@@ -164,15 +167,20 @@ class Odontogram
             }
 
             if ($section) {
-                $color = $detail->getTreatment() ? '#4d79ff' : '#ff4d4d';
+                $statusName = $detail->getStatus() ? $detail->getStatus()->getName() : '';
+                $color = (strtolower($statusName) === 'done') ? '#4d79ff' : '#ff4d4d';
                 $teeth[$toothNum]['sections'][$section] = $color;
 
+                $teeth[$toothNum]['statusId'][$section] = $detail->getStatus() ? $detail->getStatus()->getId() : null;
+
                 if ($detail->getPathology()) {
+                    $teeth[$toothNum]['pathologyId'][$section] = $detail->getPathology()->getId();
                     $teeth[$toothNum]['pathologyTypes'][$section] =
                         strtolower(str_replace(' ', '', $detail->getPathology()->getDescription()));
                 }
 
                 if ($detail->getTreatment()) {
+                    $teeth[$toothNum]['treatmentId'][$section] = $detail->getTreatment()->getId();
                     $teeth[$toothNum]['treatmentTypes'][$section] =
                         strtolower(str_replace(' ', '', $detail->getTreatment()->getTreatmentName()));
                 }
