@@ -138,7 +138,7 @@ class PopulateDataCommand extends Command
                 $dentist->setAvailableDays($data[3]);
                 $dentist->setPhone($data[4]);
                 $dentist->setEmail($data[5]);
-                $dentist->setPassword($this->passwordHasher->hashPassword($dentist, $data[6]));
+                $dentist->setPassword($data[6]);
                 $this->entityManager->persist($dentist);
             }
             $dentists[] = $dentist;
@@ -168,6 +168,7 @@ class PopulateDataCommand extends Command
                 $patient->setFamilyHistory('None');
                 $patient->setLifestyleHabits('None');
                 $patient->setMedicationAllergies('None');
+                $patient->setPassword($data[9]);
                 $this->entityManager->persist($patient);
             }
             $patients[] = $patient;
@@ -186,17 +187,11 @@ class PopulateDataCommand extends Command
 
         $connection->executeStatement('SET FOREIGN_KEY_CHECKS = 0');
 
-        // Cleanup Dentist and Patient duplicates
-        $connection->executeStatement('DELETE d1 FROM dentist d1 INNER JOIN dentist d2 WHERE d1.id > d2.id AND d1.email = d2.email');
-        $connection->executeStatement('DELETE p1 FROM patient p1 INNER JOIN patient p2 WHERE p1.id > p2.id AND p1.email = p2.email');
-        
-        // Cleanup Pathologies and Treatments duplicates
-        $connection->executeStatement('DELETE p1 FROM pathology p1 INNER JOIN pathology p2 WHERE p1.id > p2.id AND p1.description = p2.description');
-        $connection->executeStatement('DELETE t1 FROM treatment t1 INNER JOIN treatment t2 WHERE t1.id > t2.id AND t1.treatment_name = t2.treatment_name');
-        
-        // Cleanup Status duplicates and obsolete
-        $connection->executeStatement('DELETE s1 FROM status s1 INNER JOIN status s2 WHERE s1.id > s2.id AND s1.name = s2.name');
-        $connection->executeStatement("DELETE FROM status WHERE name NOT IN ('Done', 'Pending')");
+        $tables = ['appointment', 'odontogram_detail', 'odontogram', 'document', 'patient', 'dentist', 'box', 'treatment', 'pathology', 'tooth', 'status'];
+        $platform = $connection->getDatabasePlatform();
+        foreach ($tables as $table) {
+            $connection->executeStatement($platform->getTruncateTableSQL($table));
+        }
 
         $connection->executeStatement('SET FOREIGN_KEY_CHECKS = 1');
 
