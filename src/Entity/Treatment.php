@@ -27,18 +27,7 @@ class Treatment
     #[Groups(['treatment:read', 'appointment:read', 'odontogram:read', 'patient:read'])]
     private ?string $description = null;
 
-    #[ORM\Column(length: 100, nullable: true)]
-    #[Groups(['treatment:read', 'appointment:read'])]
-    private ?string $category = null;
-
-    #[ORM\Column(type: Types::INTEGER, nullable: true)]
-    #[Groups(['treatment:read', 'appointment:read'])]
-    private ?int $duration = null;
-
-    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2, nullable: true)]
-    #[Groups(['treatment:read', 'appointment:read'])]
-    private ?string $price = null;
-
+    
     /**
      * @var Collection<int, Appointment>
      */
@@ -86,42 +75,7 @@ class Treatment
         return $this;
     }
 
-    public function getCategory(): ?string
-    {
-        return $this->category;
-    }
-
-    public function setCategory(?string $category): static
-    {
-        $this->category = $category;
-
-        return $this;
-    }
-
-    public function getDuration(): ?int
-    {
-        return $this->duration;
-    }
-
-    public function setDuration(?int $duration): static
-    {
-        $this->duration = $duration;
-
-        return $this;
-    }
-
-    public function getPrice(): ?string
-    {
-        return $this->price;
-    }
-
-    public function setPrice(?string $price): static
-    {
-        $this->price = $price;
-
-        return $this;
-    }
-
+    
     /**
      * @return Collection<int, Appointment>
      */
