@@ -53,12 +53,12 @@ class Dentist implements UserInterface, PasswordAuthenticatedUserInterface
     private Collection $appointments;
 
     #[ORM\ManyToOne(targetEntity: Box::class)]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(nullable: true)]
     #[Groups(['dentist:read'])]
     private ?Box $box = null;
 
     #[ORM\ManyToOne(targetEntity: Pathology::class)]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(nullable: true)]
     #[Groups(['dentist:read'])]
     private ?Pathology $pathology = null;
 
