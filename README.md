@@ -1,6 +1,6 @@
 # Odontología Backend
 
-Sistema de gestión para clínicas dentales desarrollado con Symfony. Proporciona una API para el control de pacientes, citas y odontogramas.
+Sistema de gestión para clínicas dentales desarrollado con Symfony. Proporciona una API REST para el control de pacientes, citas, odontogramas y documentos clínicos.
 
 ## 🛠️ Tecnologías
 - **Framework:** Symfony 7.4
@@ -10,12 +10,14 @@ Sistema de gestión para clínicas dentales desarrollado con Symfony. Proporcion
 
 ## 📊 Estructura de Datos
 El sistema gestiona las siguientes entidades principales:
-- **Pacientes:** Información personal e historial.
-- **Odontólogos:** Especialistas de la clínica.
-- **Citas:** Gestión de turnos y consultas.
-- **Odontogramas:** Registro del estado dental.
-- **Documentos:** Archivos y pruebas médicas.
-- **Tratamientos y Patologías:** Catálogo de servicios médicos.
+- **Pacientes:** Información personal, historial médico y credenciales de acceso.
+- **Odontólogos:** Especialistas con horarios y especialidades.
+- **Boxes:** Consultorios disponibles en la clínica.
+- **Citas:** Gestión de turnos, estado (`pendiente` / `completada`) y asistencia.
+- **Odontogramas:** Registro del estado dental por diente y cara, vinculado a una cita.
+- **Documentos:** Archivos clínicos (radiografías, informes, presupuestos).
+- **Tratamientos y Patologías:** Catálogo de servicios y diagnósticos médicos.
+- **Dientes:** Notación FDI (permanentes 11-48, deciduos 51-85).
 
 ## 🚀 Instalación y Configuración (Guía para Profesores)
 
@@ -41,7 +43,7 @@ Para que el proyecto funcione correctamente en un entorno local (como XAMPP), si
    # 2. Crear las tablas (Ignorando migraciones incrementales)
    php bin/console doctrine:schema:update --force
 
-   # 3. Cargar los datos de prueba (Pacientes, citas, odontogramas, etc.)
+   # 3. Cargar los datos de prueba (pacientes, dentistas, citas, odontogramas, documentos...)
    php bin/console app:populate-data
    ```
 
@@ -49,6 +51,17 @@ Para que el proyecto funcione correctamente en un entorno local (como XAMPP), si
    ```bash
    symfony serve
    ```
+
+## 🔑 Credenciales de prueba
+
+| Rol | Email | Contraseña |
+|---|---|---|
+| Paciente | laura@example.com | password123 |
+| Paciente | pedro@example.com | password123 |
+| Paciente | ana@example.com | password123 |
+| Dentista | juan.perez@example.com | password123 |
+| Dentista | maria.garcia@example.com | password123 |
+| Dentista | carlos.rod@example.com | password123 |
 
 ---
 © 2026 Gestión Dental
