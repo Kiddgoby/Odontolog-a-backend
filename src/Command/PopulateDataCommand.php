@@ -21,6 +21,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
+
 #[AsCommand(
     name: 'app:populate-data',
     description: 'Populates the database with sample data for all tables.',
@@ -46,7 +47,7 @@ class PopulateDataCommand extends Command
 
         // --- Treatments ---
         $treatmentsData = [
-            ['Limpieza', 'Limpieza dental profunda'],
+            ['Rayos X', 'Radiografia dental'],
             ['Obsturacion', 'Obturación dental (empaste)'],
             ['Endodoncia', 'Tratamiento de conducto'],
             ['Extraccion', 'Extracción dental'],
@@ -152,6 +153,7 @@ class PopulateDataCommand extends Command
             $patient->setPassword($data[9]);
             $this->entityManager->persist($patient);
             $patients[] = $patient;
+            }
         }
 
         $this->entityManager->flush();
