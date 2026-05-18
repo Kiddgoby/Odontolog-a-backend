@@ -121,7 +121,10 @@ class PatientController extends AbstractController
                     ];
 
                     foreach ($odontogramJson['teeth'] as $toothId => $state) {
-                        $tooth = $toothRepo->find((int)$toothId);
+                        $tooth = $toothRepo->findOneBy(['description' => (string)$toothId]);
+                        if (!$tooth) {
+                            $tooth = $toothRepo->find((int)$toothId);
+                        }
                         if (!$tooth) {
                             $tooth = $toothRepo->findOneBy(['description' => "Tooth $toothId"]);
                         }
